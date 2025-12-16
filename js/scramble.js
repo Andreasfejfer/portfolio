@@ -211,15 +211,19 @@ export function initScramble() {
   function initAll(){
     document.querySelectorAll(".scramble-text").forEach(initOne);
     // Scramble-scroll logic
-    if (scrambleScrollObserver) scrambleScrollObserver.disconnect();
-    const scrollEls = document.querySelectorAll('.scramble-scroll');
-    if (scrollEls.length) {
-      scrambleScrollObserver = new window.IntersectionObserver((entries, observer) => {
+    // Group elements by offset value
+    const offsetMap = {};
+    scrollEls.forEach(el => {
+      const offset = parseFloat(el.getAttribute('data-scramble-offset')) || 0.3;
+      if (!offsetMap[offset]) offsetMap[offset] = [];
+      offsetMap[offset].push(el);
+    });
+    // Create one observer per offset value
+    Object.entries(offsetMap).forEach(([offset, els]) => {
+      const observer = new window.IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
           const el = entry.target;
-          // Allow per-element offset via data-scramble-offset (0-1), default 0.3
-          const offset = parseFloat(el.getAttribute('data-scramble-offset')) || 0.3;
-          if (entry.intersectionRatio >= offset) {
+          if (entry.intersectionRatio >= parseFloat(offset)) {
             if (!el.dataset.scrambleScrollDone) {
               el.dataset.scrambleScrollDone = '1';
               el.dataset.scrambleScrollVisible = '1';
@@ -287,16 +291,15 @@ export function initScramble() {
           }
         });
       }, {
-        threshold: Array.from({length: 101}, (_, i) => i / 100) // 0.00, 0.01, ..., 1.00
+        threshold: [parseFloat(offset)]
       });
-      scrollEls.forEach(el => {
-        // Always start hidden until revealed
+      els.forEach(el => {
         if (!el.dataset.scrambleScrollVisible || el.dataset.scrambleScrollVisible === '0') {
           el.style.visibility = 'hidden';
         }
-        scrambleScrollObserver.observe(el);
+        observer.observe(el);
       });
-    }
+    });
   }
 
   // If preloader is done -> start now, else wait
