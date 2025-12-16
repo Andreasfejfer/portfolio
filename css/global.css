@@ -1,1 +1,37 @@
-.name, .scte { opacity: 0; }
+/* =========================
+   YOUR SCRAMBLE STYLES (UNCHANGED)
+   ========================= */
+.scramble-text{display:inline-block;line-height:1.1}
+.scramble-char{display:inline-block;position:relative;padding:0.08em 0;line-height:1;background:transparent;color:inherit;transition:background-color .12s ease,color .12s ease;vertical-align:middle;letter-spacing:inherit;white-space:pre}
+.scramble-char.active-current,.scramble-char.active-trail{background-color:#000!important;color:#fff!important;border-radius:0;padding:0.08em 0}
+.scramble-char{box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.scramble-grey .scramble-char.active-current,.scramble-grey .scramble-char.active-trail{background-color:#8b8b8b!important;color:#fff!important}
+
+/* Load delay (ms) before entry reveal starts */
+.scramble-delay-2000{--scramble-load-delay:2000}
+
+/* Loop start delay (ms) AFTER entry animation finishes */
+.scramble-loop-delay-2000{--scramble-loop-start-delay:2000}
+
+/* Optional: pause between loop runs (overrides default LOOP_DELAY) */
+.scramble-loop-pause-2000{--scramble-loop-pause:2000}
+
+/* =========================
+   PRELOADER HELPERS
+   ========================= */
+.preloader{
+  display:flex !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  pointer-events:auto;
+  transition:opacity 1.35s ease, visibility 1.35s ease;
+}
+.preloader.is-hidden{
+  opacity:0 !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+html.preloader-lock, body.preloader-lock{height:100%;overflow:hidden}
+
+/* Prevent main scramble flash before script runs */
+html.preloader-active .scramble-text{visibility:hidden}
