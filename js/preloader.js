@@ -300,60 +300,37 @@ export function initPreloader() {
     }, wait);
   }
 
-  // Wait for full page load AND all Webflow fonts loaded
+  // Wait for full page load only
   window.addEventListener('load', () => {
-    // List your Webflow font family names here (as used in CSS, case-sensitive)
-    // List all your Webflow font family names and variants here (case-sensitive)
-    // If the font-family is always 'Ppneuemontreal' in CSS, you only need to list it once
-    // If Webflow uses different family names for each weight/style, list each one
-    const webflowFonts = [
-      'Ppneuemontreal',
-      'Ppneuemontreal Book',
-      // Add more if your CSS uses other family names
-    ];
+    setTimeout(() => {
+      if (!preState){
+        preFinishAfterMinAndLoaded();
+        return;
+      }
 
-    let fontPromise = Promise.resolve();
-    if (window.FontFaceObserver && webflowFonts.length > 0) {
-      // Wait for all listed fonts
-      fontPromise = Promise.all(
-        webflowFonts.map(fontName => {
-          const obs = new window.FontFaceObserver(fontName);
-          return obs.load(null, 3000).catch(() => {}); // 3s timeout per font
-        })
-      );
-    }
+      // Force reflow to ensure layout is stable before animation
+      document.body.offsetHeight;
 
-    fontPromise.then(() => {
-      setTimeout(() => {
-        if (!preState){
-          preFinishAfterMinAndLoaded();
-          return;
-        }
+      preReveal(preState, PRE_SPEED_REVEAL, () => {
+        let loopsDone = 0;
 
-        // Force reflow to ensure layout is stable before animation
-        document.body.offsetHeight;
+        const runLoop = () => {
+          preLoopOnce(preState, PRE_SPEED_LOOP, () => {
+            loopsDone++;
+            if (loopsDone < PRE_LOOP_COUNT){
+              setTimeout(runLoop, PRE_LOOP_PAUSE_MS);
+            } else {
+              setTimeout(() => {
+                preReverse(preState, PRE_SPEED_REVERSE, () => {
+                  preFinishAfterMinAndLoaded();
+                });
+              }, PRE_LOOP_PAUSE_MS);
+            }
+          });
+        };
 
-        preReveal(preState, PRE_SPEED_REVEAL, () => {
-          let loopsDone = 0;
-
-          const runLoop = () => {
-            preLoopOnce(preState, PRE_SPEED_LOOP, () => {
-              loopsDone++;
-              if (loopsDone < PRE_LOOP_COUNT){
-                setTimeout(runLoop, PRE_LOOP_PAUSE_MS);
-              } else {
-                setTimeout(() => {
-                  preReverse(preState, PRE_SPEED_REVERSE, () => {
-                    preFinishAfterMinAndLoaded();
-                  });
-                }, PRE_LOOP_PAUSE_MS);
-              }
-            });
-          };
-
-          setTimeout(runLoop, PRE_LOOP_PAUSE_MS);
-        });
-      }, PRE_START_DELAY_MS);
-    });
+        setTimeout(runLoop, PRE_LOOP_PAUSE_MS);
+      });
+    }, PRE_START_DELAY_MS);
   });
 }
