@@ -27,9 +27,10 @@ export function initScramble() {
       el.classList.add('scramble-color-white');
     }
 
-    // If .scramble-scroll, always start hidden
+    // If .scramble-scroll, always start hidden and mark as not revealed
     if (el.classList.contains('scramble-scroll')) {
       el.style.visibility = 'hidden';
+      el.dataset.scrambleScrollVisible = '0';
     }
 
     const originalText = el.textContent;
@@ -221,6 +222,7 @@ export function initScramble() {
           if (entry.intersectionRatio >= offset) {
             if (!el.dataset.scrambleScrollDone) {
               el.dataset.scrambleScrollDone = '1';
+              el.dataset.scrambleScrollVisible = '1';
               el.style.visibility = 'visible';
               // Run scramble animation (reuse runOnce logic)
               const chars = Array.from(el.querySelectorAll('.scramble-char'));
@@ -287,7 +289,13 @@ export function initScramble() {
       }, {
         threshold: Array.from({length: 101}, (_, i) => i / 100) // 0.00, 0.01, ..., 1.00
       });
-      scrollEls.forEach(el => scrambleScrollObserver.observe(el));
+      scrollEls.forEach(el => {
+        // Always start hidden until revealed
+        if (!el.dataset.scrambleScrollVisible || el.dataset.scrambleScrollVisible === '0') {
+          el.style.visibility = 'hidden';
+        }
+        scrambleScrollObserver.observe(el);
+      });
     }
   }
 
