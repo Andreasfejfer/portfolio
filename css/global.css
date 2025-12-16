@@ -35,12 +35,3 @@ html.preloader-lock, body.preloader-lock{height:100%;overflow:hidden}
 
 /* Prevent main scramble flash before script runs */
 html.preloader-active .scramble-text{visibility:hidden}
-
-/* Fade-in for .name elements */
-.name {
-  opacity: 0;
-  transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.name.is-visible {
-  opacity: 1;
-}
