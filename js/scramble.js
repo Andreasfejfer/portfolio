@@ -218,14 +218,22 @@ export function initScramble() {
       }
     });
 
+    // Track previous top for each element
+    const prevTops = new WeakMap();
     function checkScrambleScroll() {
       scrollEls.forEach(el => {
         if (el.dataset.scrambleScrollDone) return;
         const percent = parseFloat(el.getAttribute('data-scramble-offset')) || 30;
         const rect = el.getBoundingClientRect();
         const triggerPoint = window.innerHeight * (percent / 100);
-        // Only trigger if top of element is below triggerPoint and element is at least partially visible
-        if (rect.top <= triggerPoint && rect.bottom > 0) {
+        const prevTop = prevTops.get(el);
+        // Only trigger if top crosses from above to below triggerPoint
+        if (
+          prevTop !== undefined &&
+          prevTop > triggerPoint &&
+          rect.top <= triggerPoint &&
+          rect.bottom > 0
+        ) {
           el.dataset.scrambleScrollDone = '1';
           el.dataset.scrambleScrollVisible = '1';
           el.style.visibility = 'visible';
@@ -288,6 +296,8 @@ export function initScramble() {
           }
           runOnce();
         }
+        // Update previous top
+        prevTops.set(el, rect.top);
       });
     }
 
