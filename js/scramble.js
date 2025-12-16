@@ -220,6 +220,70 @@ export function initScramble() {
 
     // Track previous top for each element
     const prevTops = new WeakMap();
+    function triggerScramble(el) {
+      el.dataset.scrambleScrollDone = '1';
+      el.dataset.scrambleScrollVisible = '1';
+      el.style.visibility = 'visible';
+      // Run scramble animation (reuse runOnce logic)
+      const chars = Array.from(el.querySelectorAll('.scramble-char'));
+      const animatable = chars.filter(s => s.dataset.original.trim() !== "");
+      let running = false;
+      let loadTimers = [];
+      function clearTimers(list){ list.forEach(t => clearTimeout(t)); list.length = 0; }
+      function runOnce(onDone){
+        if (running || animatable.length === 0) return;
+        running = true;
+        clearTimers(loadTimers);
+        chars.forEach(s => {
+          s.classList.remove("active-current","active-trail");
+          s.textContent = "\u00A0";
+        });
+        const overlap = 0.6;
+        const baseStagger = Math.max(12, Math.round(SPEED * (1 - overlap)));
+        let completed = 0;
+        animatable.forEach((span, i) => {
+          const flashes = 1;
+          const flashInterval = Math.max(12, Math.round(SPEED / 2));
+          const start = i * baseStagger;
+          for (let f=0; f<flashes; f++){
+            loadTimers.push(setTimeout(() => {
+              span.classList.add("active-current");
+              span.textContent = randSymbol();
+              if (i>0){
+                const trail = animatable[i-1];
+                trail.classList.add("active-trail");
+                trail.textContent = randSymbol();
+              }
+              if (i>1){
+                const older = animatable[i-2];
+                if (older){
+                  older.classList.remove("active-trail");
+                  older.textContent = older.dataset.original === " " ? "\u00A0" : older.dataset.original;
+                }
+              }
+            }, start + f*flashInterval));
+          }
+          const revealTime = start + flashes*flashInterval + Math.round(SPEED * 0.15);
+          loadTimers.push(setTimeout(() => {
+            span.classList.remove("active-current","active-trail");
+            span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
+            if (i>0){
+              const prev = animatable[i-1];
+              prev.classList.remove("active-trail");
+              prev.textContent = prev.dataset.original === " " ? "\u00A0" : prev.dataset.original;
+            }
+            completed++;
+            if (completed >= animatable.length){
+              running = false;
+              clearTimers(loadTimers);
+              if (typeof onDone === "function") onDone();
+            }
+          }, revealTime));
+        });
+      }
+      runOnce();
+    }
+
     function checkScrambleScroll() {
       scrollEls.forEach(el => {
         if (el.dataset.scrambleScrollDone) return;
@@ -227,74 +291,18 @@ export function initScramble() {
         const rect = el.getBoundingClientRect();
         const triggerPoint = window.innerHeight * (percent / 100);
         const prevTop = prevTops.get(el);
-        // Only trigger if top crosses from above to below triggerPoint
-        if (
+        // On first check, trigger if already in trigger zone
+        if (prevTop === undefined && rect.top <= triggerPoint && rect.bottom > 0) {
+          triggerScramble(el);
+        }
+        // On scroll, trigger only if crossing from above to below
+        else if (
           prevTop !== undefined &&
           prevTop > triggerPoint &&
           rect.top <= triggerPoint &&
           rect.bottom > 0
         ) {
-          el.dataset.scrambleScrollDone = '1';
-          el.dataset.scrambleScrollVisible = '1';
-          el.style.visibility = 'visible';
-          // Run scramble animation (reuse runOnce logic)
-          const chars = Array.from(el.querySelectorAll('.scramble-char'));
-          const animatable = chars.filter(s => s.dataset.original.trim() !== "");
-          let running = false;
-          let loadTimers = [];
-          function clearTimers(list){ list.forEach(t => clearTimeout(t)); list.length = 0; }
-          function runOnce(onDone){
-            if (running || animatable.length === 0) return;
-            running = true;
-            clearTimers(loadTimers);
-            chars.forEach(s => {
-              s.classList.remove("active-current","active-trail");
-              s.textContent = "\u00A0";
-            });
-            const overlap = 0.6;
-            const baseStagger = Math.max(12, Math.round(SPEED * (1 - overlap)));
-            let completed = 0;
-            animatable.forEach((span, i) => {
-              const flashes = 1;
-              const flashInterval = Math.max(12, Math.round(SPEED / 2));
-              const start = i * baseStagger;
-              for (let f=0; f<flashes; f++){
-                loadTimers.push(setTimeout(() => {
-                  span.classList.add("active-current");
-                  span.textContent = randSymbol();
-                  if (i>0){
-                    const trail = animatable[i-1];
-                    trail.classList.add("active-trail");
-                    trail.textContent = randSymbol();
-                  }
-                  if (i>1){
-                    const older = animatable[i-2];
-                    if (older){
-                      older.classList.remove("active-trail");
-                      older.textContent = older.dataset.original === " " ? "\u00A0" : older.dataset.original;
-                    }
-                  }
-                }, start + f*flashInterval));
-              }
-              const revealTime = start + flashes*flashInterval + Math.round(SPEED * 0.15);
-              loadTimers.push(setTimeout(() => {
-                span.classList.remove("active-current","active-trail");
-                span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
-                if (i>0){
-                  const prev = animatable[i-1];
-                  prev.classList.remove("active-trail");
-                  prev.textContent = prev.dataset.original === " " ? "\u00A0" : prev.dataset.original;
-                }
-                completed++;
-                if (completed >= animatable.length){
-                  running = false;
-                  clearTimers(loadTimers);
-                  if (typeof onDone === "function") onDone();
-                }
-              }, revealTime));
-            });
-          }
-          runOnce();
+          triggerScramble(el);
         }
         // Update previous top
         prevTops.set(el, rect.top);
