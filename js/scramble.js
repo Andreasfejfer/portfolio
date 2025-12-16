@@ -224,6 +224,14 @@ export function initScramble() {
       const observer = new window.IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
           const el = entry.target;
+          // Debug output
+          // eslint-disable-next-line no-console
+          console.log('[scramble-scroll]', {
+            el,
+            intersectionRatio: entry.intersectionRatio,
+            threshold,
+            isIntersecting: entry.isIntersecting
+          });
           // Only trigger when crossing threshold and isIntersecting
           if (entry.isIntersecting && entry.intersectionRatio >= threshold) {
             if (!el.dataset.scrambleScrollDone) {
@@ -288,6 +296,7 @@ export function initScramble() {
                 });
               }
               runOnce();
+              // Only unobserve after animation is triggered
               observer.unobserve(el);
             }
           }
