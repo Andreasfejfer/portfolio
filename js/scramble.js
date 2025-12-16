@@ -211,6 +211,7 @@ export function initScramble() {
   function initAll(){
     document.querySelectorAll(".scramble-text").forEach(initOne);
     // Scramble-scroll logic
+    const scrollEls = document.querySelectorAll('.scramble-scroll');
     // Group elements by offset value
     const offsetMap = {};
     scrollEls.forEach(el => {
