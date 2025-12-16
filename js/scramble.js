@@ -220,10 +220,12 @@ export function initScramble() {
     });
     // Create one observer per offset value
     Object.entries(offsetMap).forEach(([offset, els]) => {
+      const threshold = parseFloat(offset);
       const observer = new window.IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
           const el = entry.target;
-          if (entry.intersectionRatio >= parseFloat(offset)) {
+          // Only trigger when crossing threshold and isIntersecting
+          if (entry.isIntersecting && entry.intersectionRatio >= threshold) {
             if (!el.dataset.scrambleScrollDone) {
               el.dataset.scrambleScrollDone = '1';
               el.dataset.scrambleScrollVisible = '1';
@@ -291,7 +293,7 @@ export function initScramble() {
           }
         });
       }, {
-        threshold: [parseFloat(offset)]
+        threshold: [threshold]
       });
       els.forEach(el => {
         if (!el.dataset.scrambleScrollVisible || el.dataset.scrambleScrollVisible === '0') {
