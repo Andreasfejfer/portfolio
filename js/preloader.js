@@ -2,8 +2,11 @@
 
 export async function initPreloader(options = {}) {
   const cfg = {
-    preloaderSelector: "#preloader",   // <- ændr hvis din hedder noget andet
-    pageWrapperSelector: ".page_wrapper",
+    // dine selectors
+    preloaderSelector: ".preloader",
+    preloaderTextSelector: ".scramble-text-preloader",
+
+    // ting der skal fade ind efter preloader
     nameSelector: ".name",
     scteSelector: ".scte",
 
@@ -11,64 +14,58 @@ export async function initPreloader(options = {}) {
     fadeDurationMs: 400,
     scteDelayMs: 500,
 
-    // hook: din preloader tekst-animation (returnér en Promise eller nothing)
-    // fx: () => runYourPreloaderTextAnimation()
-    runPreloaderText: null,
+    // midlertidig: hvor længe vi "giver" preloader-tekst animationen
+    // (vi kan senere skifte til at den venter på din rigtige scramble-finish)
+    preloaderTextWaitMs: 1800,
 
     ...options,
   };
 
   const preloaderEl = document.querySelector(cfg.preloaderSelector);
-  const pageWrapperEl = document.querySelector(cfg.pageWrapperSelector);
+  const preTextEl = document.querySelector(cfg.preloaderTextSelector);
   const nameEl = document.querySelector(cfg.nameSelector);
   const scteEl = document.querySelector(cfg.scteSelector);
 
+  console.log("Preloader init");
+
+  // Sørg for at .name og .scte ikke er synlige fra start
+  hideInstant(nameEl);
+  hideInstant(scteEl);
+
   // Hvis der ingen preloader er, så bare fortsæt
   if (!preloaderEl) {
-    console.log("Preloader init (no preloader found)");
-    revealAfterPreloader({ nameEl, scteEl, cfg });
     document.dispatchEvent(new CustomEvent("preloader:done"));
     return;
   }
 
-  console.log("Preloader init");
-
-  // Sørg for at ting vi vil fade ind IKKE er synlige fra start
-  hideInstant(nameEl);
-  hideInstant(scteEl);
-
-  // (valgfrit) skjul page wrapper indtil preloader er væk
-  // Hvis du allerede gør det i CSS, kan du fjerne de 2 linjer:
-  hideInstant(pageWrapperEl);
+  // Sørg for at preloaderen er synlig
   showInstant(preloaderEl);
+  preloaderEl.style.opacity = "1";
 
-  // Vent til alt er loadet (images, fonts etc.) – så undgår vi flash
+  // Vent til alt er loadet (minimerer flash)
   await waitForWindowLoad();
 
-  // Kør din preloader-tekst animation (hvis du sender en funktion ind)
-  if (typeof cfg.runPreloaderText === "function") {
-    try {
-      await cfg.runPreloaderText();
-    } catch (e) {
-      console.warn("runPreloaderText failed, continuing:", e);
-    }
+  // Her: din preloader-tekst animation.
+  // Lige nu: vi "giver" den tid til at køre (kan erstattes med rigtig hook bagefter).
+  if (preTextEl) {
+    showInstant(preTextEl);
   }
+  await wait(cfg.preloaderTextWaitMs);
 
-  // Fade preloader ud og fjern den
+  // Fade preloader ud
   await fadeOut(preloaderEl, cfg.fadeDurationMs);
   preloaderEl.style.display = "none";
 
-  // Vis page wrapper (så dit site dukker op)
-  showInstant(pageWrapperEl);
-
-  // Fade in .name og .scte (0.5s delay på scte)
+  // Fade ind: .name -> delay -> .scte
   await fadeIn(nameEl, cfg.fadeDurationMs);
   await wait(cfg.scteDelayMs);
   await fadeIn(scteEl, cfg.fadeDurationMs);
 
-  // Fortæl resten af dit site: "preloader er færdig"
+  // Signal til resten af sitet
   document.dispatchEvent(new CustomEvent("preloader:done"));
 }
+
+/* ---------------- helpers ---------------- */
 
 function hideInstant(el) {
   if (!el) return;
@@ -89,9 +86,7 @@ function fadeOut(el, ms) {
   el.style.transition = `opacity ${ms}ms ease`;
   el.style.opacity = "1";
   el.style.visibility = "visible";
-  el.style.pointerEvents = "auto";
-  // trigger reflow
-  el.getBoundingClientRect();
+  el.getBoundingClientRect(); // reflow
   el.style.opacity = "0";
   return wait(ms);
 }
@@ -103,7 +98,7 @@ function fadeIn(el, ms) {
   el.style.opacity = "0";
   el.style.visibility = "visible";
   el.style.pointerEvents = "auto";
-  el.getBoundingClientRect();
+  el.getBoundingClientRect(); // reflow
   el.style.opacity = "1";
   return wait(ms);
 }
