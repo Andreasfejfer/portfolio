@@ -1,7 +1,7 @@
 import { initPreloader } from "./preloader.js";
-import { initMainScrambleGated } from "./scramble.js";
+import { initScramble } from "./scramble.js";
 
 export function initHomePage() {
   initPreloader();
-  initMainScrambleGated();
+  initScramble();
 }
