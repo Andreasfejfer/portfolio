@@ -211,97 +211,90 @@ export function initScramble() {
   function initAll(){
     document.querySelectorAll(".scramble-text").forEach(initOne);
     // Scramble-scroll logic
-    const scrollEls = document.querySelectorAll('.scramble-scroll');
+    const scrollEls = Array.from(document.querySelectorAll('.scramble-scroll'));
     scrollEls.forEach(el => {
-      // Use data-scramble-offset as percent (default 30)
-      const percent = parseFloat(el.getAttribute('data-scramble-offset')) || 30;
-      const rootMargin = `-${percent}% 0px 0px 0px`;
-      const observer = new window.IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-          // Debug output
-          // eslint-disable-next-line no-console
-          console.log('[scramble-scroll]', {
-            el: entry.target,
-            boundingClientRect: entry.boundingClientRect,
-            intersectionRect: entry.intersectionRect,
-            rootBounds: entry.rootBounds,
-            isIntersecting: entry.isIntersecting
-          });
-          if (entry.isIntersecting && !entry.target.dataset.scrambleScrollDone) {
-            const el = entry.target;
-            el.dataset.scrambleScrollDone = '1';
-            el.dataset.scrambleScrollVisible = '1';
-            el.style.visibility = 'visible';
-            // Run scramble animation (reuse runOnce logic)
-            const chars = Array.from(el.querySelectorAll('.scramble-char'));
-            const animatable = chars.filter(s => s.dataset.original.trim() !== "");
-            let running = false;
-            let loadTimers = [];
-            function clearTimers(list){ list.forEach(t => clearTimeout(t)); list.length = 0; }
-            function runOnce(onDone){
-              if (running || animatable.length === 0) return;
-              running = true;
-              clearTimers(loadTimers);
-              chars.forEach(s => {
-                s.classList.remove("active-current","active-trail");
-                s.textContent = "\u00A0";
-              });
-              const overlap = 0.6;
-              const baseStagger = Math.max(12, Math.round(SPEED * (1 - overlap)));
-              let completed = 0;
-              animatable.forEach((span, i) => {
-                const flashes = 1;
-                const flashInterval = Math.max(12, Math.round(SPEED / 2));
-                const start = i * baseStagger;
-                for (let f=0; f<flashes; f++){
-                  loadTimers.push(setTimeout(() => {
-                    span.classList.add("active-current");
-                    span.textContent = randSymbol();
-                    if (i>0){
-                      const trail = animatable[i-1];
-                      trail.classList.add("active-trail");
-                      trail.textContent = randSymbol();
-                    }
-                    if (i>1){
-                      const older = animatable[i-2];
-                      if (older){
-                        older.classList.remove("active-trail");
-                        older.textContent = older.dataset.original === " " ? "\u00A0" : older.dataset.original;
-                      }
-                    }
-                  }, start + f*flashInterval));
-                }
-                const revealTime = start + flashes*flashInterval + Math.round(SPEED * 0.15);
-                loadTimers.push(setTimeout(() => {
-                  span.classList.remove("active-current","active-trail");
-                  span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
-                  if (i>0){
-                    const prev = animatable[i-1];
-                    prev.classList.remove("active-trail");
-                    prev.textContent = prev.dataset.original === " " ? "\u00A0" : prev.dataset.original;
-                  }
-                  completed++;
-                  if (completed >= animatable.length){
-                    running = false;
-                    clearTimers(loadTimers);
-                    if (typeof onDone === "function") onDone();
-                  }
-                }, revealTime));
-              });
-            }
-            runOnce();
-            observer.unobserve(el);
-          }
-        });
-      }, {
-        threshold: 0,
-        rootMargin
-      });
       if (!el.dataset.scrambleScrollVisible || el.dataset.scrambleScrollVisible === '0') {
         el.style.visibility = 'hidden';
       }
-      observer.observe(el);
     });
+
+    function checkScrambleScroll() {
+      scrollEls.forEach(el => {
+        if (el.dataset.scrambleScrollDone) return;
+        const percent = parseFloat(el.getAttribute('data-scramble-offset')) || 30;
+        const rect = el.getBoundingClientRect();
+        const triggerPoint = window.innerHeight * (percent / 100);
+        // Only trigger if top of element is below triggerPoint and element is at least partially visible
+        if (rect.top <= triggerPoint && rect.bottom > 0) {
+          el.dataset.scrambleScrollDone = '1';
+          el.dataset.scrambleScrollVisible = '1';
+          el.style.visibility = 'visible';
+          // Run scramble animation (reuse runOnce logic)
+          const chars = Array.from(el.querySelectorAll('.scramble-char'));
+          const animatable = chars.filter(s => s.dataset.original.trim() !== "");
+          let running = false;
+          let loadTimers = [];
+          function clearTimers(list){ list.forEach(t => clearTimeout(t)); list.length = 0; }
+          function runOnce(onDone){
+            if (running || animatable.length === 0) return;
+            running = true;
+            clearTimers(loadTimers);
+            chars.forEach(s => {
+              s.classList.remove("active-current","active-trail");
+              s.textContent = "\u00A0";
+            });
+            const overlap = 0.6;
+            const baseStagger = Math.max(12, Math.round(SPEED * (1 - overlap)));
+            let completed = 0;
+            animatable.forEach((span, i) => {
+              const flashes = 1;
+              const flashInterval = Math.max(12, Math.round(SPEED / 2));
+              const start = i * baseStagger;
+              for (let f=0; f<flashes; f++){
+                loadTimers.push(setTimeout(() => {
+                  span.classList.add("active-current");
+                  span.textContent = randSymbol();
+                  if (i>0){
+                    const trail = animatable[i-1];
+                    trail.classList.add("active-trail");
+                    trail.textContent = randSymbol();
+                  }
+                  if (i>1){
+                    const older = animatable[i-2];
+                    if (older){
+                      older.classList.remove("active-trail");
+                      older.textContent = older.dataset.original === " " ? "\u00A0" : older.dataset.original;
+                    }
+                  }
+                }, start + f*flashInterval));
+              }
+              const revealTime = start + flashes*flashInterval + Math.round(SPEED * 0.15);
+              loadTimers.push(setTimeout(() => {
+                span.classList.remove("active-current","active-trail");
+                span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
+                if (i>0){
+                  const prev = animatable[i-1];
+                  prev.classList.remove("active-trail");
+                  prev.textContent = prev.dataset.original === " " ? "\u00A0" : prev.dataset.original;
+                }
+                completed++;
+                if (completed >= animatable.length){
+                  running = false;
+                  clearTimers(loadTimers);
+                  if (typeof onDone === "function") onDone();
+                }
+              }, revealTime));
+            });
+          }
+          runOnce();
+        }
+      });
+    }
+
+    window.addEventListener('scroll', checkScrambleScroll, { passive: true });
+    window.addEventListener('resize', checkScrambleScroll);
+    // Initial check in case already in view
+    setTimeout(checkScrambleScroll, 10);
   }
 
   // If preloader is done -> start now, else wait
