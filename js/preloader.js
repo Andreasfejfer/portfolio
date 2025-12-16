@@ -41,6 +41,10 @@ export function initPreloader() {
     window.__PRELOADER_DONE = true;
     document.documentElement.classList.remove("preloader-active");
     window.dispatchEvent(new CustomEvent("preloader:done"));
+      // Fade in .name elements after preloader is done
+      document.querySelectorAll('.name').forEach(el => {
+        el.classList.add('is-visible');
+      });
   };
 
   const preSkip = () => preDone();
