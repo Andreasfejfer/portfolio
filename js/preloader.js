@@ -281,7 +281,7 @@ export function initPreloader() {
   const preStartedAt = performance.now();
   const preMinEndAt = preStartedAt + PRE_MIN_TOTAL_MS;
 
-  function preFinishAfterMin(){
+  function preFinishAfterMinAndLoaded() {
     const wait = Math.max(0, preMinEndAt - performance.now());
     setTimeout(() => {
       setTimeout(() => {
@@ -297,31 +297,34 @@ export function initPreloader() {
     }, wait);
   }
 
-  setTimeout(() => {
-    if (!preState){
-      preFinishAfterMin();
-      return;
-    }
+  // Wait for full page load
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      if (!preState){
+        preFinishAfterMinAndLoaded();
+        return;
+      }
 
-    preReveal(preState, PRE_SPEED_REVEAL, () => {
-      let loopsDone = 0;
+      preReveal(preState, PRE_SPEED_REVEAL, () => {
+        let loopsDone = 0;
 
-      const runLoop = () => {
-        preLoopOnce(preState, PRE_SPEED_LOOP, () => {
-          loopsDone++;
-          if (loopsDone < PRE_LOOP_COUNT){
-            setTimeout(runLoop, PRE_LOOP_PAUSE_MS);
-          } else {
-            setTimeout(() => {
-              preReverse(preState, PRE_SPEED_REVERSE, () => {
-                preFinishAfterMin();
-              });
-            }, PRE_LOOP_PAUSE_MS);
-          }
-        });
-      };
+        const runLoop = () => {
+          preLoopOnce(preState, PRE_SPEED_LOOP, () => {
+            loopsDone++;
+            if (loopsDone < PRE_LOOP_COUNT){
+              setTimeout(runLoop, PRE_LOOP_PAUSE_MS);
+            } else {
+              setTimeout(() => {
+                preReverse(preState, PRE_SPEED_REVERSE, () => {
+                  preFinishAfterMinAndLoaded();
+                });
+              }, PRE_LOOP_PAUSE_MS);
+            }
+          });
+        };
 
-      setTimeout(runLoop, PRE_LOOP_PAUSE_MS);
-    });
-  }, PRE_START_DELAY_MS);
+        setTimeout(runLoop, PRE_LOOP_PAUSE_MS);
+      });
+    }, PRE_START_DELAY_MS);
+  });
 }
