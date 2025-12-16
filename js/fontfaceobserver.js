@@ -1,8 +1,21 @@
 /*! FontFaceObserver v2.1.0 - © Bram Stein. License: BSD-3-Clause */
 (function(waitForBody){
-	if (!document.body) {
-		document.addEventListener('DOMContentLoaded', waitForBody);
-		return;
+	function ready(fn) {
+		if (document.body) return fn();
+		if (document.readyState === "loading") {
+			document.addEventListener('DOMContentLoaded', function cb() {
+				document.removeEventListener('DOMContentLoaded', cb);
+				fn();
+			});
+		} else {
+			// DOMContentLoaded already fired, but body not yet available
+			var check = setInterval(function() {
+				if (document.body) {
+					clearInterval(check);
+					fn();
+				}
+			}, 10);
+		}
 	}
-	waitForBody();
+	ready(waitForBody);
 })(function(){'use strict';function f(a){this.a=document.createElement('div');this.a.setAttribute('aria-hidden','true');this.a.appendChild(document.createTextNode(a));this.b=document.createElement('span');this.c=document.createElement('span');this.h=document.createElement('span');this.g=document.createElement('span');this.f=-1;this.b.style.cssText='display:inline-block;position:absolute;height:100%;width:100%;overflow:scroll;font-size:16px;';this.c.style.cssText='display:inline-block;position:absolute;height:100%;width:100%;overflow:scroll;font-size:16px;';this.g.style.cssText='display:inline-block;position:absolute;height:100%;width:100%;overflow:scroll;font-size:16px;';this.h.style.cssText='display:inline-block;position:absolute;height:100%;width:100%;overflow:scroll;font-size:16px;';this.a.appendChild(this.b);this.a.appendChild(this.c);this.a.appendChild(this.h);this.a.appendChild(this.g)}function l(a,b){a.a.style.cssText='min-width:20px;min-height:20px;display:inline-block;position:absolute;width:auto;margin:0;padding:0;top:-999px;left:-999px;white-space:nowrap;font-size:100px;font-family:'+b+';';}function m(a){var b=a.a.offsetWidth,c=a.b.offsetWidth,d=a.c.offsetWidth,e=a.h.offsetWidth,g=a.g.offsetWidth;return b!==c||b!==d||b!==e||b!==g}function n(a,b){a.b.scrollLeft=a.b.scrollWidth;a.c.scrollLeft=a.c.scrollWidth;a.h.scrollLeft=a.h.scrollWidth;a.g.scrollLeft=a.g.scrollWidth;var c=0;return function d(){if(m(a))b();else if(100>c++){setTimeout(d,50)}}}function p(a,b){this.family=a;this.style=b.style||'normal';this.weight=b.weight||'normal';this.stretch=b.stretch||'normal'}var q=null;function r(){if(null===q){var a=document.createElement('div');try{a.style.font='condensed 100px sans-serif'}catch(b){}q=''!==a.style.font}return q}p.prototype.load=function(a,b){var c=this,d=a||'BESbswy',e=0,b=b||3E3,k=(new Date).getTime();return new Promise(function(g,h){if(r()){var t=new f(d);l(t,c.family+','+c.style+','+c.weight+','+c.stretch+',serif');document.body.appendChild(t.a);n(t,function(){document.body.removeChild(t.a);g(c)});setTimeout(function(){document.body.removeChild(t.a);h(c)},b)}else g(c)})};window.FontFaceObserver=p;});
