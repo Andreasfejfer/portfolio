@@ -212,105 +212,95 @@ export function initScramble() {
     document.querySelectorAll(".scramble-text").forEach(initOne);
     // Scramble-scroll logic
     const scrollEls = document.querySelectorAll('.scramble-scroll');
-    // Group elements by offset value
-    const offsetMap = {};
     scrollEls.forEach(el => {
-      const offset = parseFloat(el.getAttribute('data-scramble-offset')) || 0.3;
-      if (!offsetMap[offset]) offsetMap[offset] = [];
-      offsetMap[offset].push(el);
-    });
-    // Create one observer per offset value
-    Object.entries(offsetMap).forEach(([offset, els]) => {
-      const threshold = parseFloat(offset);
+      // Use data-scramble-offset as percent (default 30)
+      const percent = parseFloat(el.getAttribute('data-scramble-offset')) || 30;
+      const rootMargin = `-${percent}% 0px 0px 0px`;
       const observer = new window.IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
-          const el = entry.target;
           // Debug output
           // eslint-disable-next-line no-console
           console.log('[scramble-scroll]', {
-            el,
-            intersectionRatio: entry.intersectionRatio,
-            threshold,
+            el: entry.target,
+            boundingClientRect: entry.boundingClientRect,
+            intersectionRect: entry.intersectionRect,
+            rootBounds: entry.rootBounds,
             isIntersecting: entry.isIntersecting
           });
-          // Only trigger when crossing threshold and isIntersecting
-          if (entry.isIntersecting && entry.intersectionRatio >= threshold) {
-            if (!el.dataset.scrambleScrollDone) {
-              el.dataset.scrambleScrollDone = '1';
-              el.dataset.scrambleScrollVisible = '1';
-              el.style.visibility = 'visible';
-              // Run scramble animation (reuse runOnce logic)
-              const chars = Array.from(el.querySelectorAll('.scramble-char'));
-              const animatable = chars.filter(s => s.dataset.original.trim() !== "");
-              let running = false;
-              let loadTimers = [];
-              function clearTimers(list){ list.forEach(t => clearTimeout(t)); list.length = 0; }
-              function runOnce(onDone){
-                if (running || animatable.length === 0) return;
-                running = true;
-                clearTimers(loadTimers);
-                chars.forEach(s => {
-                  s.classList.remove("active-current","active-trail");
-                  s.textContent = "\u00A0";
-                });
-                const overlap = 0.6;
-                const baseStagger = Math.max(12, Math.round(SPEED * (1 - overlap)));
-                let completed = 0;
-                animatable.forEach((span, i) => {
-                  const flashes = 1;
-                  const flashInterval = Math.max(12, Math.round(SPEED / 2));
-                  const start = i * baseStagger;
-                  for (let f=0; f<flashes; f++){
-                    loadTimers.push(setTimeout(() => {
-                      span.classList.add("active-current");
-                      span.textContent = randSymbol();
-                      if (i>0){
-                        const trail = animatable[i-1];
-                        trail.classList.add("active-trail");
-                        trail.textContent = randSymbol();
-                      }
-                      if (i>1){
-                        const older = animatable[i-2];
-                        if (older){
-                          older.classList.remove("active-trail");
-                          older.textContent = older.dataset.original === " " ? "\u00A0" : older.dataset.original;
-                        }
-                      }
-                    }, start + f*flashInterval));
-                  }
-                  const revealTime = start + flashes*flashInterval + Math.round(SPEED * 0.15);
+          if (entry.isIntersecting && !entry.target.dataset.scrambleScrollDone) {
+            const el = entry.target;
+            el.dataset.scrambleScrollDone = '1';
+            el.dataset.scrambleScrollVisible = '1';
+            el.style.visibility = 'visible';
+            // Run scramble animation (reuse runOnce logic)
+            const chars = Array.from(el.querySelectorAll('.scramble-char'));
+            const animatable = chars.filter(s => s.dataset.original.trim() !== "");
+            let running = false;
+            let loadTimers = [];
+            function clearTimers(list){ list.forEach(t => clearTimeout(t)); list.length = 0; }
+            function runOnce(onDone){
+              if (running || animatable.length === 0) return;
+              running = true;
+              clearTimers(loadTimers);
+              chars.forEach(s => {
+                s.classList.remove("active-current","active-trail");
+                s.textContent = "\u00A0";
+              });
+              const overlap = 0.6;
+              const baseStagger = Math.max(12, Math.round(SPEED * (1 - overlap)));
+              let completed = 0;
+              animatable.forEach((span, i) => {
+                const flashes = 1;
+                const flashInterval = Math.max(12, Math.round(SPEED / 2));
+                const start = i * baseStagger;
+                for (let f=0; f<flashes; f++){
                   loadTimers.push(setTimeout(() => {
-                    span.classList.remove("active-current","active-trail");
-                    span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
+                    span.classList.add("active-current");
+                    span.textContent = randSymbol();
                     if (i>0){
-                      const prev = animatable[i-1];
-                      prev.classList.remove("active-trail");
-                      prev.textContent = prev.dataset.original === " " ? "\u00A0" : prev.dataset.original;
+                      const trail = animatable[i-1];
+                      trail.classList.add("active-trail");
+                      trail.textContent = randSymbol();
                     }
-                    completed++;
-                    if (completed >= animatable.length){
-                      running = false;
-                      clearTimers(loadTimers);
-                      if (typeof onDone === "function") onDone();
+                    if (i>1){
+                      const older = animatable[i-2];
+                      if (older){
+                        older.classList.remove("active-trail");
+                        older.textContent = older.dataset.original === " " ? "\u00A0" : older.dataset.original;
+                      }
                     }
-                  }, revealTime));
-                });
-              }
-              runOnce();
-              // Only unobserve after animation is triggered
-              observer.unobserve(el);
+                  }, start + f*flashInterval));
+                }
+                const revealTime = start + flashes*flashInterval + Math.round(SPEED * 0.15);
+                loadTimers.push(setTimeout(() => {
+                  span.classList.remove("active-current","active-trail");
+                  span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
+                  if (i>0){
+                    const prev = animatable[i-1];
+                    prev.classList.remove("active-trail");
+                    prev.textContent = prev.dataset.original === " " ? "\u00A0" : prev.dataset.original;
+                  }
+                  completed++;
+                  if (completed >= animatable.length){
+                    running = false;
+                    clearTimers(loadTimers);
+                    if (typeof onDone === "function") onDone();
+                  }
+                }, revealTime));
+              });
             }
+            runOnce();
+            observer.unobserve(el);
           }
         });
       }, {
-        threshold: [threshold]
+        threshold: 0,
+        rootMargin
       });
-      els.forEach(el => {
-        if (!el.dataset.scrambleScrollVisible || el.dataset.scrambleScrollVisible === '0') {
-          el.style.visibility = 'hidden';
-        }
-        observer.observe(el);
-      });
+      if (!el.dataset.scrambleScrollVisible || el.dataset.scrambleScrollVisible === '0') {
+        el.style.visibility = 'hidden';
+      }
+      observer.observe(el);
     });
   }
 
