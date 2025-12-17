@@ -34,33 +34,36 @@ export function initScramble() {
     }
 
 
-    // Handle <br> tags: preserve line breaks by splitting on <br> and processing each segment
-    // Use innerHTML to get the raw HTML, so we can detect <br> tags
-    const originalHTML = el.innerHTML;
-    if (!originalHTML || !originalHTML.trim()) return;
+    // Scramble only text nodes, preserve child elements (e.g. <span>, <br>)
+    const originalNodes = Array.from(el.childNodes);
+    if (!originalNodes.length) return;
 
     el.innerHTML = "";
 
     const chars = [];
     const animatable = [];
 
-    // Split on <br> (case-insensitive, with or without closing slash)
-    const segments = originalHTML.split(/<br\s*\/?>/i);
-    segments.forEach((segment, segIdx) => {
-      Array.from(segment).forEach(ch => {
-        const span = document.createElement("span");
-        span.className = "scramble-char";
-        span.dataset.original = ch;
-        span.textContent = ch === " " ? "\u00A0" : ch;
-        el.appendChild(span);
-        chars.push(span);
-        if (ch.trim() !== "") animatable.push(span);
-      });
-      if (segIdx < segments.length - 1) {
-        // Insert a <br> element between segments
+    function processNode(node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        Array.from(node.textContent).forEach(ch => {
+          const span = document.createElement("span");
+          span.className = "scramble-char";
+          span.dataset.original = ch;
+          span.textContent = ch === " " ? "\u00A0" : ch;
+          el.appendChild(span);
+          chars.push(span);
+          if (ch.trim() !== "") animatable.push(span);
+        });
+      } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "BR") {
         el.appendChild(document.createElement("br"));
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        // For other elements (e.g. span), clone and append as-is
+        const clone = node.cloneNode(true);
+        el.appendChild(clone);
       }
-    });
+    }
+
+    originalNodes.forEach(processNode);
 
     // hide until entry reveal begins
     el.style.visibility = "hidden";
