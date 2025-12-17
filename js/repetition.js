@@ -50,20 +50,19 @@ export function initRepetitionEffectGSAP() {
 				lastCount = count;
 			}
 
-			// Animate each clone with GSAP
-			clones.forEach((clone, i) => {
-				const offset = (i + 1) * 10 * percent;
-				const skew = 10 * percent * (i + 1);
-				const scale = 1 - (i + 1) * 0.04;
-				gsap.to(clone, {
-					x: offset,
-					skewX: skew,
-					scale: scale,
-					opacity: 0.7 - (i + 1) * 0.06,
-					duration: 0.35,
-					ease: 'power2.out',
-				});
-			});
+			// Animate each clone with GSAP (horizontal only)
+						clones.forEach((clone, i) => {
+							const offset = (i + 1) * 10 * percent;
+							const scale = 1 - (i + 1) * 0.04;
+							gsap.to(clone, {
+								x: offset,
+								scale: scale,
+								skewX: 0,
+								opacity: 0.7 - (i + 1) * 0.06,
+								duration: 0.35,
+								ease: 'power2.out',
+							});
+						});
 		});
 
 		img.addEventListener('mouseleave', () => {
