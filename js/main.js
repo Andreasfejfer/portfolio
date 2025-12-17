@@ -44,7 +44,7 @@ function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14 } = {
 // Initialize only if body has 'page-index' class
 document.addEventListener('DOMContentLoaded', () => {
   if (document.body.classList.contains('page-index')) {
-    initGsapMarquee({ trackSelector: '.marquee_track', duration: 14 });
+    initGsapMarquee({ trackSelector: '.marquee_track', duration: 21 });
   }
 });
 import "./core.js";
