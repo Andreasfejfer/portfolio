@@ -21,18 +21,16 @@ export function initRepetitionEffectGSAP() {
 
 		let isHovering = false;
 		let clones = [];
-		let lastCount = 0;
+		const maxCount = 15;
 
-		function ensureClones(count) {
-			// Only add/remove if count changed
-			if (clones.length === count - 1) return;
-			// Remove all
+		// Create all clones once, keep them hidden initially
+		function createClones() {
 			repeats.innerHTML = '';
 			clones = [];
-			for (let i = 1; i < count; i++) {
+			for (let i = 1; i < maxCount; i++) {
 				const clone = img.cloneNode();
 				clone.classList.add('rep_repeat');
-				clone.style.opacity = '1';
+				clone.style.opacity = '0';
 				clone.style.margin = '0';
 				clone.style.border = 'none';
 				clone.style.width = img.offsetWidth + 'px';
@@ -47,10 +45,15 @@ export function initRepetitionEffectGSAP() {
 				clones.push(clone);
 			}
 		}
+		createClones();
 
 		img.addEventListener('mouseenter', () => {
 			isHovering = true;
 			img.classList.add('repeating');
+			// Show all clones (opacity 0, will be set on mousemove)
+			clones.forEach(clone => {
+				clone.style.opacity = '0';
+			});
 		});
 
 		img.addEventListener('mousemove', (e) => {
@@ -64,47 +67,64 @@ export function initRepetitionEffectGSAP() {
 			const strength = Math.abs(percent - 0.5) * 2; // 0 (center) to 1 (edge)
 			// At the edge (strength=1), count=15; at center (strength=0), count=2
 			const minCount = 2;
-			const maxCount = 15;
 			const count = Math.round((maxCount - minCount) * strength + minCount);
 
-			ensureClones(count);
-
-			// Animate original image as well
-			const allImages = [img, ...clones];
-			allImages.forEach((el, i) => {
-				// Original image is index 0, so push it further
-				const base = (i === 0) ? 1.2 : 1;
-				const offset = direction * (i + 1) * 60 * strength * base;
-				gsap.to(el, {
-					x: offset,
-					scaleY: 1,
-					scaleX: 1,
-					opacity: 1,
-					duration: 0.25,
-					ease: 'power3.out',
-				});
+			// Only show the needed number of clones
+			clones.forEach((clone, i) => {
+				if (i < count - 1) {
+					clone.style.visibility = 'visible';
+					gsap.to(clone, {
+						x: direction * (i + 1) * 60 * strength,
+						opacity: 1,
+						duration: 0.18,
+						scaleX: 1,
+						scaleY: 1,
+						ease: 'power3.out',
+					});
+				} else {
+					gsap.to(clone, {
+						opacity: 0,
+						duration: 0.18,
+						onComplete: () => {
+							clone.style.visibility = 'hidden';
+						}
+					});
+				}
+			});
+			// Animate original image
+			gsap.to(img, {
+				x: direction * 1.2 * 60 * strength,
+				scaleX: 1,
+				scaleY: 1,
+				opacity: 1,
+				duration: 0.18,
+				ease: 'power3.out',
 			});
 		});
 
 		img.addEventListener('mouseleave', () => {
 			isHovering = false;
 			img.classList.remove('repeating');
-			// Animate all images (original and clones) back to normal
-			const allImages = [img, ...clones];
-			allImages.forEach((el, i) => {
-				gsap.to(el, {
+			// Fade out all clones and reset transforms
+			clones.forEach((clone, i) => {
+				gsap.to(clone, {
 					x: 0,
-					scaleY: 1,
-					scaleX: 1,
-					opacity: 1,
-					duration: 0.5,
+					opacity: 0,
+					duration: 0.3,
 					ease: 'power3.inOut',
 					onComplete: () => {
-						if (i > 0 && el.parentElement) el.parentElement.removeChild(el);
+						clone.style.visibility = 'hidden';
 					}
 				});
 			});
-			clones = [];
+			gsap.to(img, {
+				x: 0,
+				scaleX: 1,
+				scaleY: 1,
+				opacity: 1,
+				duration: 0.3,
+				ease: 'power3.inOut',
+			});
 		});
 	});
 }
