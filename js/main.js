@@ -10,15 +10,16 @@ function duplicateMarqueeContent(trackSelector = '.marquee_track') {
 
 function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14 } = {}) {
   duplicateMarqueeContent(trackSelector);
-  let object = { value: 1 };
-  let tl = gsap.timeline({ repeat: -1 });
-  tl.fromTo(
-    trackSelector,
-    { xPercent: 0 },
-    { xPercent: -50, duration: duration, ease: 'none' }
-  );
 
   document.querySelectorAll(trackSelector).forEach(track => {
+    let object = { value: 1 };
+    let tl = gsap.timeline({ repeat: -1 });
+    tl.fromTo(
+      track,
+      { xPercent: 0 },
+      { xPercent: -50, duration: duration, ease: 'none' }
+    );
+
     track.addEventListener('mouseenter', function () {
       gsap.fromTo(
         object,
