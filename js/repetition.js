@@ -21,12 +21,36 @@ export function initRepetitionEffectGSAP() {
 
 		let isHovering = false;
 		let clones = [];
+		let lastCount = 0;
+
+		function ensureClones(count) {
+			// Only add/remove if count changed
+			if (clones.length === count - 1) return;
+			// Remove all
+			repeats.innerHTML = '';
+			clones = [];
+			for (let i = 1; i < count; i++) {
+				const clone = img.cloneNode();
+				clone.classList.add('rep_repeat');
+				clone.style.opacity = '1';
+				clone.style.margin = '0';
+				clone.style.border = 'none';
+				clone.style.width = img.offsetWidth + 'px';
+				clone.style.height = img.offsetHeight + 'px';
+				clone.style.objectFit = window.getComputedStyle(img).objectFit;
+				clone.style.objectPosition = window.getComputedStyle(img).objectPosition;
+				clone.style.position = 'absolute';
+				clone.style.top = '0';
+				clone.style.left = '0';
+				clone.style.pointerEvents = 'none';
+				repeats.appendChild(clone);
+				clones.push(clone);
+			}
+		}
 
 		img.addEventListener('mouseenter', () => {
 			isHovering = true;
 			img.classList.add('repeating');
-			repeats.innerHTML = '';
-			clones = [];
 		});
 
 		img.addEventListener('mousemove', (e) => {
@@ -43,45 +67,23 @@ export function initRepetitionEffectGSAP() {
 			const maxCount = 15;
 			const count = Math.round((maxCount - minCount) * strength + minCount);
 
-			// Flicker/lag effect: clear and re-add with a small delay if mouse moves fast
-			if (img._repFlickerTimeout) clearTimeout(img._repFlickerTimeout);
-			repeats.innerHTML = '';
-			clones = [];
-			// Prevent layout shift: set repeats to not affect layout, clones are absolutely positioned
-			for (let i = 1; i < count; i++) {
-				const clone = img.cloneNode();
-				clone.classList.add('rep_repeat');
-				clone.style.opacity = '1';
-				clone.style.margin = '0';
-				clone.style.border = 'none';
-				clone.style.width = img.offsetWidth + 'px';
-				clone.style.height = img.offsetHeight + 'px';
-				clone.style.objectFit = window.getComputedStyle(img).objectFit;
-				clone.style.objectPosition = window.getComputedStyle(img).objectPosition;
-				clone.style.position = 'absolute';
-				clone.style.top = '0';
-				clone.style.left = '0';
-				repeats.appendChild(clone);
-				clones.push(clone);
-			}
+			ensureClones(count);
 
 			// Animate original image as well
 			const allImages = [img, ...clones];
 			allImages.forEach((el, i) => {
 				// Original image is index 0, so push it further
 				const base = (i === 0) ? 1.2 : 1;
-				const offset = direction * (i + 1) * 60 * strength * base; // much more spread
+				const offset = direction * (i + 1) * 60 * strength * base;
 				gsap.to(el, {
 					x: offset,
 					scaleY: 1,
 					scaleX: 1,
 					opacity: 1,
-					duration: 0.45,
+					duration: 0.25,
 					ease: 'power3.out',
 				});
 			});
-
-			// (moved into flicker timeout above)
 		});
 
 		img.addEventListener('mouseleave', () => {
@@ -95,7 +97,7 @@ export function initRepetitionEffectGSAP() {
 					scaleY: 1,
 					scaleX: 1,
 					opacity: 1,
-					duration: 0.7,
+					duration: 0.5,
 					ease: 'power3.inOut',
 					onComplete: () => {
 						if (i > 0 && el.parentElement) el.parentElement.removeChild(el);
