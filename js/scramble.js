@@ -287,7 +287,7 @@ export function initScramble() {
     function checkScrambleScroll() {
       scrollEls.forEach(el => {
         if (el.dataset.scrambleScrollDone) return;
-        const percent = parseFloat(el.getAttribute('data-scramble-offset')) || 30;
+        const percent = parseFloat(el.getAttribute('data-scramble-offset')) || 70;
         const rect = el.getBoundingClientRect();
         const triggerPoint = window.innerHeight * (percent / 100);
         const prevTop = prevTops.get(el);
