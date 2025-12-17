@@ -40,6 +40,8 @@ export function initRepetitionEffectGSAP() {
 			const strength = Math.abs(percent - 0.5) * 2; // 0 (center) to 1 (edge)
 			const count = Math.floor(6 * strength) + 2; // 2-8 repetitions
 
+			console.log('mousemove', { percent, direction, strength, count });
+
 			repeats.innerHTML = '';
 			clones = [];
 			for (let i = 1; i < count; i++) {
