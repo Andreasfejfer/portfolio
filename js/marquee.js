@@ -10,12 +10,16 @@ export function initMarquee({ selector = '.marquee', speed = 20 } = {}) {
   const images = Array.from(marquee.querySelectorAll('.marquee__img'));
   if (!images.length) return;
 
-  // Remove images from marquee and add to track
+
+  // Remove all images from their parents and add to track
   let track = marquee.querySelector('.marquee__track');
   if (!track) {
     track = document.createElement('div');
     track.className = 'marquee__track';
-    images.forEach(img => track.appendChild(img));
+    images.forEach(img => {
+      if (img.parentNode) img.parentNode.removeChild(img);
+      track.appendChild(img);
+    });
     marquee.appendChild(track);
   }
 
