@@ -1,6 +1,7 @@
 // GSAP-based repetition effect for .rep_img
 // Requires GSAP to be loaded in the page (via CDN or local file)
 export function initRepetitionEffectGSAP() {
+	console.log('Repetition effect initialized');
 	document.querySelectorAll('.rep_img').forEach(img => {
 		// Ensure image is wrapped in a container
 		if (!img.parentElement.classList.contains('rep_container')) {
