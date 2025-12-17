@@ -67,16 +67,17 @@ export function initRepetitionEffectGSAP() {
 		img.addEventListener('mouseleave', () => {
 			isHovering = false;
 			img.classList.remove('repeating');
-			clones.forEach(clone => {
-				gsap.to(clone, {
-					opacity: 0,
-					duration: 0.2,
-					onComplete: () => {
-						if (clone.parentElement) clone.parentElement.removeChild(clone);
-					}
-				});
-			});
-			clones = [];
+			// Debug: Do not remove clones on mouseleave so you can inspect them
+			// clones.forEach(clone => {
+			//   gsap.to(clone, {
+			//     opacity: 0,
+			//     duration: 0.2,
+			//     onComplete: () => {
+			//       if (clone.parentElement) clone.parentElement.removeChild(clone);
+			//     }
+			//   });
+			// });
+			// clones = [];
 		});
 	});
 }
