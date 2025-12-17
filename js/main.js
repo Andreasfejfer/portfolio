@@ -12,35 +12,31 @@ function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14 } = {
   duplicateMarqueeContent(trackSelector);
 
   document.querySelectorAll(trackSelector).forEach(track => {
+    const totalWidth = track.scrollWidth / 2;
     let object = { value: 1 };
-    let tl = gsap.timeline({ repeat: -1 });
-    tl.fromTo(
-      track,
-      { xPercent: 0 },
-      { xPercent: -50, duration: duration, ease: 'none' }
-    );
+    let tween = gsap.to(track, {
+      x: () => `-${totalWidth}px`,
+      duration: duration,
+      ease: "none",
+      repeat: -1,
+      modifiers: {
+        x: gsap.utils.unitize(x => parseFloat(x) % totalWidth)
+      }
+    });
 
     track.addEventListener('mouseenter', function () {
-      gsap.fromTo(
-        object,
-        { value: 1 },
-        {
-          value: 0,
-          duration: 1.2,
-          onUpdate: () => { tl.timeScale(object.value); }
-        }
-      );
+      gsap.to(object, {
+        value: 0,
+        duration: 1.2,
+        onUpdate: () => { tween.timeScale(object.value); }
+      });
     });
     track.addEventListener('mouseleave', function () {
-      gsap.fromTo(
-        object,
-        { value: 0 },
-        {
-          value: 1,
-          duration: 1.2,
-          onUpdate: () => { tl.timeScale(object.value); }
-        }
-      );
+      gsap.to(object, {
+        value: 1,
+        duration: 1.2,
+        onUpdate: () => { tween.timeScale(object.value); }
+      });
     });
   });
 }
