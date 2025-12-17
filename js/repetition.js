@@ -47,13 +47,11 @@ export function initRepetitionEffectGSAP() {
 			for (let i = 1; i < count; i++) {
 				const clone = img.cloneNode();
 				clone.classList.add('rep_repeat');
-				clone.style.opacity = '0';
-				// Remove margin, border, and set width/height to match original
+				clone.style.opacity = '1'; // No opacity effect
 				clone.style.margin = '0';
 				clone.style.border = 'none';
 				clone.style.width = img.offsetWidth + 'px';
 				clone.style.height = img.offsetHeight + 'px';
-				// Copy object-fit and object-position if present
 				clone.style.objectFit = window.getComputedStyle(img).objectFit;
 				clone.style.objectPosition = window.getComputedStyle(img).objectPosition;
 				repeats.appendChild(clone);
@@ -64,8 +62,9 @@ export function initRepetitionEffectGSAP() {
 				const offset = direction * (i + 1) * 30 * strength; // more spread
 				gsap.to(clone, {
 					x: offset,
-					scale: 1 - (i + 1) * 0.04,
-					opacity: 0.35 - (i * 0.05),
+					scaleY: 1,
+					scaleX: 1,
+					opacity: 1,
 					duration: 0.3,
 					ease: 'power2.out',
 				});
@@ -75,17 +74,16 @@ export function initRepetitionEffectGSAP() {
 		img.addEventListener('mouseleave', () => {
 			isHovering = false;
 			img.classList.remove('repeating');
-			// Debug: Do not remove clones on mouseleave so you can inspect them
-			// clones.forEach(clone => {
-			//   gsap.to(clone, {
-			//     opacity: 0,
-			//     duration: 0.2,
-			//     onComplete: () => {
-			//       if (clone.parentElement) clone.parentElement.removeChild(clone);
-			//     }
-			//   });
-			// });
-			// clones = [];
+			clones.forEach(clone => {
+				gsap.to(clone, {
+					opacity: 0,
+					duration: 0.2,
+					onComplete: () => {
+						if (clone.parentElement) clone.parentElement.removeChild(clone);
+					}
+				});
+			});
+			clones = [];
 		});
 	});
 }
