@@ -48,16 +48,24 @@ export function initRepetitionEffectGSAP() {
 				const clone = img.cloneNode();
 				clone.classList.add('rep_repeat');
 				clone.style.opacity = '0';
+				// Remove margin, border, and set width/height to match original
+				clone.style.margin = '0';
+				clone.style.border = 'none';
+				clone.style.width = img.offsetWidth + 'px';
+				clone.style.height = img.offsetHeight + 'px';
+				// Copy object-fit and object-position if present
+				clone.style.objectFit = window.getComputedStyle(img).objectFit;
+				clone.style.objectPosition = window.getComputedStyle(img).objectPosition;
 				repeats.appendChild(clone);
 				clones.push(clone);
 			}
 
 			clones.forEach((clone, i) => {
-				const offset = direction * (i + 1) * 12 * strength;
+				const offset = direction * (i + 1) * 30 * strength; // more spread
 				gsap.to(clone, {
 					x: offset,
 					scale: 1 - (i + 1) * 0.04,
-					opacity: 0.5 - (i * 0.06),
+					opacity: 0.35 - (i * 0.05),
 					duration: 0.3,
 					ease: 'power2.out',
 				});
