@@ -47,37 +47,39 @@ export function initRepetitionEffectGSAP() {
 			if (img._repFlickerTimeout) clearTimeout(img._repFlickerTimeout);
 			repeats.innerHTML = '';
 			clones = [];
-			img._repFlickerTimeout = setTimeout(() => {
-				for (let i = 1; i < count; i++) {
-					const clone = img.cloneNode();
-					clone.classList.add('rep_repeat');
-					clone.style.opacity = '1';
-					clone.style.margin = '0';
-					clone.style.border = 'none';
-					clone.style.width = img.offsetWidth + 'px';
-					clone.style.height = img.offsetHeight + 'px';
-					clone.style.objectFit = window.getComputedStyle(img).objectFit;
-					clone.style.objectPosition = window.getComputedStyle(img).objectPosition;
-					repeats.appendChild(clone);
-					clones.push(clone);
-				}
+			// Prevent layout shift: set repeats to not affect layout, clones are absolutely positioned
+			for (let i = 1; i < count; i++) {
+				const clone = img.cloneNode();
+				clone.classList.add('rep_repeat');
+				clone.style.opacity = '1';
+				clone.style.margin = '0';
+				clone.style.border = 'none';
+				clone.style.width = img.offsetWidth + 'px';
+				clone.style.height = img.offsetHeight + 'px';
+				clone.style.objectFit = window.getComputedStyle(img).objectFit;
+				clone.style.objectPosition = window.getComputedStyle(img).objectPosition;
+				clone.style.position = 'absolute';
+				clone.style.top = '0';
+				clone.style.left = '0';
+				repeats.appendChild(clone);
+				clones.push(clone);
+			}
 
-				// Animate original image as well
-				const allImages = [img, ...clones];
-				allImages.forEach((el, i) => {
-					// Original image is index 0, so push it further
-					const base = (i === 0) ? 1.2 : 1;
-					const offset = direction * (i + 1) * 60 * strength * base; // much more spread
-					gsap.to(el, {
-						x: offset,
-						scaleY: 1,
-						scaleX: 1,
-						opacity: 1,
-						duration: 0.45,
-						ease: 'power3.out',
-					});
+			// Animate original image as well
+			const allImages = [img, ...clones];
+			allImages.forEach((el, i) => {
+				// Original image is index 0, so push it further
+				const base = (i === 0) ? 1.2 : 1;
+				const offset = direction * (i + 1) * 60 * strength * base; // much more spread
+				gsap.to(el, {
+					x: offset,
+					scaleY: 1,
+					scaleX: 1,
+					opacity: 1,
+					duration: 0.45,
+					ease: 'power3.out',
 				});
-			}, 12 + Math.random() * 30); // 12-42ms delay for flicker/lag
+			});
 
 			// (moved into flicker timeout above)
 		});
