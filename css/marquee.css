@@ -1,0 +1,29 @@
+/* Marquee styles for 2:1 ratio, 30% width, 10% split padding */
+.marquee {
+  display: flex;
+  overflow: hidden;
+  width: 100vw;
+  gap: 0;
+  position: relative;
+  --img-width: 30vw;
+  --img-padding: 5vw;
+}
+.marquee__img {
+  flex: 0 0 var(--img-width);
+  aspect-ratio: 2 / 1;
+  width: var(--img-width);
+  margin: 0 var(--img-padding);
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  background: #eee;
+}
+.marquee__track {
+  display: flex;
+  animation: marquee 20s linear infinite;
+  will-change: transform;
+}
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
