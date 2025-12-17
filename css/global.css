@@ -1,3 +1,38 @@
+/* Repetition effect styles */
+.rep_container {
+  position: relative;
+  display: inline-block;
+  overflow: visible;
+}
+
+.rep_img {
+  display: block;
+  position: relative;
+  z-index: 2;
+  transition: filter 0.3s;
+}
+
+.rep_img.repeating {
+  filter: brightness(0.8);
+}
+
+.rep_repeats {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.rep_repeat {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform, opacity;
+  opacity: 0.7;
+  transition: transform 0.3s, opacity 0.3s;
+  pointer-events: none;
+}
 /* =========================
    YOUR SCRAMBLE STYLES (UNCHANGED)
    ========================= */
