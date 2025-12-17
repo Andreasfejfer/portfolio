@@ -1,7 +1,5 @@
 // js/preloader.js
 export function initPreloader() {
-    // Ensure FontFaceObserver is available
-    // You must include js/fontfaceobserver.js in your HTML before this script
 
   window.__PRELOADER_DONE = false;
 
