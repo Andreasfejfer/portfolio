@@ -34,36 +34,40 @@ export function initScramble() {
     }
 
 
-    // Scramble only text nodes, preserve child elements (e.g. <span>, <br>)
+
+    // Scramble only text nodes, preserve child elements (e.g. <span>, <br>),
+    // but collect all animatable spans in document order for unified animation
     const originalNodes = Array.from(el.childNodes);
     if (!originalNodes.length) return;
 
     el.innerHTML = "";
 
     const chars = [];
-    const animatable = [];
-
-    function processNode(node) {
+    // We'll collect animatable spans in document order, even inside children
+    function processNode(node, parent) {
       if (node.nodeType === Node.TEXT_NODE) {
         Array.from(node.textContent).forEach(ch => {
           const span = document.createElement("span");
           span.className = "scramble-char";
           span.dataset.original = ch;
           span.textContent = ch === " " ? "\u00A0" : ch;
-          el.appendChild(span);
+          parent.appendChild(span);
           chars.push(span);
-          if (ch.trim() !== "") animatable.push(span);
         });
       } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "BR") {
-        el.appendChild(document.createElement("br"));
+        parent.appendChild(document.createElement("br"));
       } else if (node.nodeType === Node.ELEMENT_NODE) {
-        // For other elements (e.g. span), clone and append as-is
-        const clone = node.cloneNode(true);
-        el.appendChild(clone);
+        // For other elements (e.g. span), clone and recurse into children
+        const clone = node.cloneNode(false); // shallow clone
+        parent.appendChild(clone);
+        Array.from(node.childNodes).forEach(child => processNode(child, clone));
       }
     }
 
-    originalNodes.forEach(processNode);
+    originalNodes.forEach(n => processNode(n, el));
+
+    // Now, collect all animatable spans in document order (deep)
+    const animatable = Array.from(el.querySelectorAll('.scramble-char')).filter(s => s.dataset.original.trim() !== "");
 
     // hide until entry reveal begins
     el.style.visibility = "hidden";
