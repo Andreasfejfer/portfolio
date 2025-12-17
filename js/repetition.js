@@ -19,7 +19,6 @@ export function initRepetitionEffectGSAP() {
 		}
 
 		let isHovering = false;
-		let lastCount = 0;
 		let clones = [];
 
 		img.addEventListener('mouseenter', () => {
@@ -34,52 +33,47 @@ export function initRepetitionEffectGSAP() {
 			const rect = img.getBoundingClientRect();
 			const mouseX = e.clientX - rect.left;
 			const percent = Math.min(Math.max(mouseX / rect.width, 0), 1);
-			const count = Math.floor(8 * percent) + 2; // 2-10 repetitions
 
-			// Only update if count changes or clones are missing
-			if (count !== lastCount || clones.length !== count - 1) {
-				repeats.innerHTML = '';
-				clones = [];
-				for (let i = 1; i < count; i++) {
-					const clone = img.cloneNode();
-					clone.classList.add('rep_repeat');
-					clone.style.opacity = '0';
-					repeats.appendChild(clone);
-					clones.push(clone);
-				}
-				lastCount = count;
+			// Direction: left if mouse is left half, right if right half
+			const direction = percent < 0.5 ? -1 : 1;
+			const strength = Math.abs(percent - 0.5) * 2; // 0 (center) to 1 (edge)
+			const count = Math.floor(6 * strength) + 2; // 2-8 repetitions
+
+			repeats.innerHTML = '';
+			clones = [];
+			for (let i = 1; i < count; i++) {
+				const clone = img.cloneNode();
+				clone.classList.add('rep_repeat');
+				clone.style.opacity = '0';
+				repeats.appendChild(clone);
+				clones.push(clone);
 			}
 
-			// Animate each clone with GSAP (horizontal only)
-						clones.forEach((clone, i) => {
-							const offset = (i + 1) * 10 * percent;
-							const scale = 1 - (i + 1) * 0.04;
-							gsap.to(clone, {
-								x: offset,
-								scale: scale,
-								skewX: 0,
-								opacity: 0.7 - (i + 1) * 0.06,
-								duration: 0.35,
-								ease: 'power2.out',
-							});
-						});
+			clones.forEach((clone, i) => {
+				const offset = direction * (i + 1) * 12 * strength;
+				gsap.to(clone, {
+					x: offset,
+					scale: 1 - (i + 1) * 0.04,
+					opacity: 0.5 - (i * 0.06),
+					duration: 0.3,
+					ease: 'power2.out',
+				});
+			});
 		});
 
 		img.addEventListener('mouseleave', () => {
 			isHovering = false;
 			img.classList.remove('repeating');
-			// Animate out and remove
-			clones.forEach((clone, i) => {
+			clones.forEach(clone => {
 				gsap.to(clone, {
 					opacity: 0,
-					duration: 0.3,
+					duration: 0.2,
 					onComplete: () => {
 						if (clone.parentElement) clone.parentElement.removeChild(clone);
 					}
 				});
 			});
 			clones = [];
-			lastCount = 0;
 		});
 	});
 }
