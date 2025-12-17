@@ -33,22 +33,33 @@ export function initScramble() {
       el.dataset.scrambleScrollVisible = '0';
     }
 
-    const originalText = el.textContent;
-    if (!originalText || !originalText.trim()) return;
+
+    // Handle <br> tags: preserve line breaks by splitting on <br> and processing each segment
+    // Use innerHTML to get the raw HTML, so we can detect <br> tags
+    const originalHTML = el.innerHTML;
+    if (!originalHTML || !originalHTML.trim()) return;
 
     el.innerHTML = "";
 
     const chars = [];
     const animatable = [];
 
-    Array.from(originalText).forEach(ch => {
-      const span = document.createElement("span");
-      span.className = "scramble-char";
-      span.dataset.original = ch;
-      span.textContent = ch === " " ? "\u00A0" : ch;
-      el.appendChild(span);
-      chars.push(span);
-      if (ch.trim() !== "") animatable.push(span);
+    // Split on <br> (case-insensitive, with or without closing slash)
+    const segments = originalHTML.split(/<br\s*\/?>/i);
+    segments.forEach((segment, segIdx) => {
+      Array.from(segment).forEach(ch => {
+        const span = document.createElement("span");
+        span.className = "scramble-char";
+        span.dataset.original = ch;
+        span.textContent = ch === " " ? "\u00A0" : ch;
+        el.appendChild(span);
+        chars.push(span);
+        if (ch.trim() !== "") animatable.push(span);
+      });
+      if (segIdx < segments.length - 1) {
+        // Insert a <br> element between segments
+        el.appendChild(document.createElement("br"));
+      }
     });
 
     // hide until entry reveal begins
