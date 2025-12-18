@@ -10,6 +10,10 @@ export function initMarquee({ selector = '.marquee', speed = 20 } = {}) {
   const images = Array.from(marquee.querySelectorAll('.marquee__img'));
   if (!images.length) return;
 
+  // Assign a unique data-marquee-id to each image (before duplication)
+  images.forEach((img, i) => {
+    img.dataset.marqueeId = i;
+  });
 
   // Remove all images from their parents and add to track
   let track = marquee.querySelector('.marquee__track');
@@ -30,4 +34,24 @@ export function initMarquee({ selector = '.marquee', speed = 20 } = {}) {
 
   // Set animation duration based on speed
   track.style.animationDuration = speed + 's';
+
+  // Add hover effect: highlight all images with the same data-marquee-id
+  track.addEventListener('mouseover', function (e) {
+    const target = e.target.closest('.marquee__img');
+    if (target && target.dataset.marqueeId) {
+      const id = target.dataset.marqueeId;
+      marquee.querySelectorAll('.marquee__img[data-marquee-id="' + id + '"]').forEach(img => {
+        img.classList.add('marquee__img--active');
+      });
+    }
+  });
+  track.addEventListener('mouseout', function (e) {
+    const target = e.target.closest('.marquee__img');
+    if (target && target.dataset.marqueeId) {
+      const id = target.dataset.marqueeId;
+      marquee.querySelectorAll('.marquee__img[data-marquee-id="' + id + '"]').forEach(img => {
+        img.classList.remove('marquee__img--active');
+      });
+    }
+  });
 }

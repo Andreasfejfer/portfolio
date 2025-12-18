@@ -17,6 +17,15 @@
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   background: #eee;
+  transition: box-shadow 0.3s, filter 0.3s, z-index 0s;
+  z-index: 0;
+  position: relative;
+}
+
+.marquee__img.marquee__img--active {
+  z-index: 10;
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08);
+  filter: brightness(1.05) saturate(1.1);
 }
 .marquee__track {
   display: flex;
