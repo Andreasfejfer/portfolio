@@ -56,24 +56,16 @@ async function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14
       const newSrc = target.src;
       const newAlt = target.alt;
       allImgs.forEach(img => {
-        img.classList.add('marquee_img--fade');
-        setTimeout(() => {
-          img.src = newSrc;
-          img.alt = newAlt;
-          img.classList.add('marquee_img--active');
-          img.classList.remove('marquee_img--fade');
-        }, 50);
+        img.src = newSrc;
+        img.alt = newAlt;
+        img.classList.add('marquee_img--active');
       });
     }
     function deactivateAllImgs() {
       allImgs.forEach(img => {
-        img.classList.add('marquee_img--fade');
-        setTimeout(() => {
-          img.src = img.dataset.originalSrc;
-          img.alt = img.dataset.originalAlt;
-          img.classList.remove('marquee_img--active');
-          img.classList.remove('marquee_img--fade');
-        }, 50);
+        img.src = img.dataset.originalSrc;
+        img.alt = img.dataset.originalAlt;
+        img.classList.remove('marquee_img--active');
       });
     }
 

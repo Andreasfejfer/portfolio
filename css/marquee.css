@@ -17,10 +17,9 @@
   border-radius: 0;
   box-shadow: none;
   background: #eee;
-  transition: filter 0.3s, z-index 0s, opacity 0.35s cubic-bezier(.4,0,.2,1);
+  transition: filter 0.3s, z-index 0s;
   z-index: 0;
   position: relative;
-  opacity: 1;
 }
 
 .marquee_img.marquee_img--active {
@@ -28,12 +27,8 @@
   box-shadow: none;
   filter: none;
   transform: none;
-  opacity: 1;
 }
 
-.marquee_img.marquee_img--fade {
-  opacity: 0;
-}
 .marquee__track {
   display: flex;
   animation: marquee 20s linear infinite;
