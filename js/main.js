@@ -1,17 +1,28 @@
 // GSAP Marquee Animation with Perfect Loop
 // Requires GSAP to be loaded globally (via CDN in Webflow footer)
 
-function duplicateMarqueeContent(trackSelector = '.marquee_track') {
-  document.querySelectorAll(trackSelector).forEach(track => {
-    // Duplicate all children for seamless loop
-    track.innerHTML += track.innerHTML;
-  });
+
+function waitForImages(track) {
+  const images = Array.from(track.querySelectorAll('img'));
+  if (images.length === 0) return Promise.resolve();
+  return Promise.all(images.map(img => {
+    if (img.complete && img.naturalWidth !== 0) return Promise.resolve();
+    return new Promise(resolve => {
+      img.addEventListener('load', resolve, { once: true });
+      img.addEventListener('error', resolve, { once: true });
+    });
+  }));
 }
 
-function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14 } = {}) {
-  duplicateMarqueeContent(trackSelector);
+function duplicateMarqueeContent(track) {
+  track.innerHTML += track.innerHTML;
+}
 
-  document.querySelectorAll(trackSelector).forEach(track => {
+async function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14 } = {}) {
+  const tracks = document.querySelectorAll(trackSelector);
+  for (const track of tracks) {
+    await waitForImages(track);
+    duplicateMarqueeContent(track);
     const totalWidth = track.scrollWidth / 2;
     let object = { value: 1 };
     let tween = gsap.to(track, {
@@ -23,7 +34,6 @@ function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14 } = {
         x: gsap.utils.unitize(x => parseFloat(x) % totalWidth)
       }
     });
-
     track.addEventListener('mouseenter', function () {
       gsap.to(object, {
         value: 0,
@@ -38,7 +48,7 @@ function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14 } = {
         onUpdate: () => { tween.timeScale(object.value); }
       });
     });
-  });
+  }
 }
 
 // Initialize only if body has 'page-index' class
