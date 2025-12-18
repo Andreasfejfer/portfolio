@@ -49,28 +49,54 @@ async function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14
       img.dataset.originalAlt = img.alt;
     });
 
-    track.addEventListener('mouseover', function (e) {
-      const target = e.target.closest('img.marquee_img');
-      if (target) {
-        const newSrc = target.src;
-        const newAlt = target.alt;
-        allImgs.forEach(img => {
+    let isHovering = false;
+    let hoverTimeout = null;
+
+    function activateAllImgs(target) {
+      const newSrc = target.src;
+      const newAlt = target.alt;
+      allImgs.forEach(img => {
+        img.classList.add('marquee_img--fade');
+        setTimeout(() => {
           img.src = newSrc;
           img.alt = newAlt;
           img.classList.add('marquee_img--active');
-        });
-      }
-    });
-    track.addEventListener('mouseout', function (e) {
-      const target = e.target.closest('img.marquee_img');
-      if (target) {
-        allImgs.forEach(img => {
+          img.classList.remove('marquee_img--fade');
+        }, 50);
+      });
+    }
+    function deactivateAllImgs() {
+      allImgs.forEach(img => {
+        img.classList.add('marquee_img--fade');
+        setTimeout(() => {
           img.src = img.dataset.originalSrc;
           img.alt = img.dataset.originalAlt;
           img.classList.remove('marquee_img--active');
-        });
+          img.classList.remove('marquee_img--fade');
+        }, 50);
+      });
+    }
+
+    // Mouseenter on image: activate
+    track.addEventListener('mouseenter', function (e) {
+      const target = e.target.closest('img.marquee_img');
+      if (target) {
+        isHovering = true;
+        clearTimeout(hoverTimeout);
+        activateAllImgs(target);
       }
-    });
+    }, true);
+
+    // Mouseleave on image: deactivate
+    track.addEventListener('mouseleave', function (e) {
+      if (isHovering) {
+        isHovering = false;
+        clearTimeout(hoverTimeout);
+        hoverTimeout = setTimeout(() => {
+          deactivateAllImgs();
+        }, 0);
+      }
+    }, true);
   }
 }
 
