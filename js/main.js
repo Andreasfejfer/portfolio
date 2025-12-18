@@ -22,8 +22,8 @@ async function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14
   const tracks = document.querySelectorAll(trackSelector);
   for (const track of tracks) {
     await waitForImages(track);
-    // Assign unique data-marquee-id to each image before duplication
-    const images = Array.from(track.querySelectorAll('img.marquee__img'));
+    // Assign unique data-marquee-id to each image before duplication (use correct class)
+    const images = Array.from(track.querySelectorAll('img.marquee_img'));
     images.forEach((img, i) => {
       img.dataset.marqueeId = i;
     });
@@ -54,21 +54,21 @@ async function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14
       });
     });
 
-    // Hover effect: highlight all images with the same data-marquee-id
+    // Hover effect: highlight all images with the same data-marquee-id (use correct class)
     track.addEventListener('mouseover', function (e) {
-      const target = e.target.closest('img.marquee__img');
+      const target = e.target.closest('img.marquee_img');
       if (target && target.dataset.marqueeId) {
         const id = target.dataset.marqueeId;
-        track.querySelectorAll('img.marquee__img[data-marquee-id="' + id + '"]').forEach(img => {
+        track.querySelectorAll('img.marquee_img[data-marquee-id="' + id + '"]').forEach(img => {
           img.classList.add('marquee__img--active');
         });
       }
     });
     track.addEventListener('mouseout', function (e) {
-      const target = e.target.closest('img.marquee__img');
+      const target = e.target.closest('img.marquee_img');
       if (target && target.dataset.marqueeId) {
         const id = target.dataset.marqueeId;
-        track.querySelectorAll('img.marquee__img[data-marquee-id="' + id + '"]').forEach(img => {
+        track.querySelectorAll('img.marquee_img[data-marquee-id="' + id + '"]').forEach(img => {
           img.classList.remove('marquee__img--active');
         });
       }
