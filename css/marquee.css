@@ -12,22 +12,22 @@
   flex: 0 0 var(--img-width);
   aspect-ratio: 2 / 1;
   width: var(--img-width);
-  margin: 0 var(--img-padding);
+  margin: 0 calc(var(--img-padding) / 2);
   object-fit: cover;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: 0;
+  box-shadow: none;
   background: #eee;
-  transition: box-shadow 0.3s, filter 0.3s, z-index 0s;
+  transition: filter 0.3s, z-index 0s;
   z-index: 0;
   position: relative;
 }
 
 .marquee_img.marquee_img--active {
   z-index: 10;
-  box-shadow: 0 12px 48px 0 rgba(0,0,0,0.28), 0 2px 8px rgba(0,0,0,0.12);
-  filter: brightness(1.15) saturate(1.2) drop-shadow(0 0 8px #fff8);
-  transform: scale(1.08);
-  transition: box-shadow 0.3s, filter 0.3s, z-index 0s, transform 0.3s;
+  box-shadow: none;
+  filter: none;
+  transform: none;
+  transition: filter 0.3s, z-index 0s;
 }
 .marquee__track {
   display: flex;

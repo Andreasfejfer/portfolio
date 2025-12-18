@@ -39,20 +39,7 @@ async function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14
         x: gsap.utils.unitize(x => parseFloat(x) % totalWidth)
       }
     });
-    track.addEventListener('mouseenter', function () {
-      gsap.to(object, {
-        value: 0,
-        duration: 1.2,
-        onUpdate: () => { tween.timeScale(object.value); }
-      });
-    });
-    track.addEventListener('mouseleave', function () {
-      gsap.to(object, {
-        value: 1,
-        duration: 1.2,
-        onUpdate: () => { tween.timeScale(object.value); }
-      });
-    });
+    // Marquee no longer pauses on hover
 
     // Hover effect: highlight all images with the same data-marquee-id (use correct class)
     // Store original src/alt for all images
