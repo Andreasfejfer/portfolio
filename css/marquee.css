@@ -22,11 +22,12 @@
   position: relative;
 }
 
-.marquee_img.marquee__img--active,
 .marquee_img.marquee_img--active {
   z-index: 10;
-  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08);
-  filter: brightness(1.05) saturate(1.1);
+  box-shadow: 0 12px 48px 0 rgba(0,0,0,0.28), 0 2px 8px rgba(0,0,0,0.12);
+  filter: brightness(1.15) saturate(1.2) drop-shadow(0 0 8px #fff8);
+  transform: scale(1.08);
+  transition: box-shadow 0.3s, filter 0.3s, z-index 0s, transform 0.3s;
 }
 .marquee__track {
   display: flex;

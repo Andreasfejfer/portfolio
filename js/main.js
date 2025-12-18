@@ -55,21 +55,32 @@ async function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14
     });
 
     // Hover effect: highlight all images with the same data-marquee-id (use correct class)
+    // Store original src/alt for all images
+    const allImgs = Array.from(track.querySelectorAll('img.marquee_img'));
+    allImgs.forEach(img => {
+      img.dataset.originalSrc = img.src;
+      img.dataset.originalAlt = img.alt;
+    });
+
     track.addEventListener('mouseover', function (e) {
       const target = e.target.closest('img.marquee_img');
-      if (target && target.dataset.marqueeId) {
-        const id = target.dataset.marqueeId;
-        track.querySelectorAll('img.marquee_img[data-marquee-id="' + id + '"]').forEach(img => {
-          img.classList.add('marquee__img--active');
+      if (target) {
+        const newSrc = target.src;
+        const newAlt = target.alt;
+        allImgs.forEach(img => {
+          img.src = newSrc;
+          img.alt = newAlt;
+          img.classList.add('marquee_img--active');
         });
       }
     });
     track.addEventListener('mouseout', function (e) {
       const target = e.target.closest('img.marquee_img');
-      if (target && target.dataset.marqueeId) {
-        const id = target.dataset.marqueeId;
-        track.querySelectorAll('img.marquee_img[data-marquee-id="' + id + '"]').forEach(img => {
-          img.classList.remove('marquee__img--active');
+      if (target) {
+        allImgs.forEach(img => {
+          img.src = img.dataset.originalSrc;
+          img.alt = img.dataset.originalAlt;
+          img.classList.remove('marquee_img--active');
         });
       }
     });
