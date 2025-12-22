@@ -77,8 +77,9 @@ export function initScramble() {
     const onceFlagKey = onceKey ? `scramble_once:${onceKey}` : null;
     const hasPlayedOnce = onceFlagKey ? sessionStorage.getItem(onceFlagKey) === "1" : false;
 
-    // Skip entry animation on internal navigations after preloader for headers or explicit once-marked elements
-    const skipHeadReveal = isHeadScramble && hasSeenPreloader && !preloaderJustFinished;
+    // If the preloader already ran this session and we are not immediately after it,
+    // skip the entry animation for headers or any once-key elements.
+    const skipAfterPreloader = hasSeenPreloader && !preloaderJustFinished && (isHeadScramble || !!onceFlagKey);
     const skipOnceReveal = hasPlayedOnce && !preloaderJustFinished;
 
     // hide until entry reveal begins (unless we short-circuit for head after preloader)
@@ -216,7 +217,7 @@ export function initScramble() {
     const loopPause = readVarMs(el, "--scramble-loop-pause", LOOP_DELAY);
 
     // Short-circuit header/once-marked elements after the preloader on later pages
-    if (skipHeadReveal || skipOnceReveal) {
+    if (skipAfterPreloader || skipOnceReveal) {
       animatable.forEach(span => {
         span.classList.remove("active-current","active-trail");
         span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
