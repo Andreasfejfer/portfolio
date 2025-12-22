@@ -1,8 +1,12 @@
 
-import { initPreloader } from "./preloader.js";
-import { initScramble } from "./scramble.js";
 
 export function initHomePage() {
   initPreloader();
-  initScramble();
+  // Only run scramble after preloader is done (and session key is set)
+  window.addEventListener("preloader:done", () => {
+    setTimeout(() => {
+      initScramble();
+    }, 0);
+  }, { once: true });
+  // If preloader already done (e.g. on internal navigation), do not run scramble
 }
