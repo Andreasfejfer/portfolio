@@ -67,7 +67,10 @@ export function initScramble() {
     // Now, collect all animatable spans in document order (deep)
     const animatable = Array.from(el.querySelectorAll('.scramble-char')).filter(s => s.dataset.original.trim() !== "");
 
-    // hide until entry reveal begins
+    const isHeadScramble = el.classList.contains('head') && el.classList.contains('scramble-text');
+    const hasSeenPreloader = sessionStorage.getItem('preloader_shown_session') === "1";
+
+    // hide until entry reveal begins (unless we short-circuit for head after preloader)
     el.style.visibility = "hidden";
 
     let running = false;
@@ -217,6 +220,18 @@ export function initScramble() {
     const loadDelay = readVarMs(el, "--scramble-load-delay", 0) + GLOBAL_PAGELOAD_OFFSET;
     const loopStartDelay = readVarMs(el, "--scramble-loop-start-delay", 0) + GLOBAL_PAGELOAD_OFFSET;
     const loopPause = readVarMs(el, "--scramble-loop-pause", LOOP_DELAY);
+
+    // Short-circuit: if header text and preloader already seen, reveal immediately and keep hover only
+    if (isHeadScramble && hasSeenPreloader) {
+      animatable.forEach(span => {
+        span.classList.remove("active-current","active-trail");
+        span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
+      });
+      el.style.visibility = "visible";
+      el.addEventListener("pointerenter", () => runHoverOnce());
+      el.addEventListener("touchstart", () => runHoverOnce(), { passive:true });
+      return;
+    }
 
     // If .scramble-scroll, defer animation to IntersectionObserver
     if (el.classList.contains('scramble-scroll')) {
