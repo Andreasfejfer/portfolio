@@ -332,3 +332,8 @@ export function initPreloader() {
     }, PRE_START_DELAY_MS);
   });
 }
+
+// Fallback: expose globally in case scripts load non-module
+if (typeof window !== "undefined" && !window.initPreloader) {
+  window.initPreloader = initPreloader;
+}

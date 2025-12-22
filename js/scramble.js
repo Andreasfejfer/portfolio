@@ -359,3 +359,8 @@ export function initScramble() {
   if (window.__PRELOADER_DONE === true) start();
   else window.addEventListener("preloader:done", start, { once:true });
 }
+
+// Fallback: expose globally in case scripts load non-module
+if (typeof window !== "undefined" && !window.initScramble) {
+  window.initScramble = initScramble;
+}
