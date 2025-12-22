@@ -7,6 +7,7 @@ export function initScramble() {
   const HOVER_SPEED = 120;
   const LOOP_DELAY = 2000;
   const GLOBAL_PAGELOAD_OFFSET = 1000;
+  let preloaderJustFinished = false;
 
   const randSymbol = () => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
 
@@ -69,6 +70,7 @@ export function initScramble() {
 
     const isHeadScramble = el.classList.contains('head') && el.classList.contains('scramble-text');
     const hasSeenPreloader = sessionStorage.getItem('preloader_shown_session') === "1";
+    const skipHeadReveal = isHeadScramble && hasSeenPreloader && !preloaderJustFinished;
 
     // hide until entry reveal begins (unless we short-circuit for head after preloader)
     el.style.visibility = "hidden";
@@ -92,23 +94,6 @@ export function initScramble() {
         s.classList.remove("active-current","active-trail");
         s.textContent = "\u00A0";
       });
-
-      // Only animate header text on first page load
-      if (el.classList.contains('head') && el.classList.contains('scramble-text')) {
-        if (sessionStorage.getItem('preloader_shown_session') !== "1") {
-          // Animate as normal (first load)
-        } else {
-          // Reveal instantly, no animation (internal navigation)
-          animatable.forEach(span => {
-            span.classList.remove("active-current","active-trail");
-            span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
-          });
-          running = false;
-          clearTimers(loadTimers);
-          if (typeof onDone === "function") onDone();
-          return;
-        }
-      }
 
       const overlap = 0.6;
       const baseStagger = Math.max(12, Math.round(SPEED * (1 - overlap)));
@@ -221,8 +206,8 @@ export function initScramble() {
     const loopStartDelay = readVarMs(el, "--scramble-loop-start-delay", 0) + GLOBAL_PAGELOAD_OFFSET;
     const loopPause = readVarMs(el, "--scramble-loop-pause", LOOP_DELAY);
 
-    // Short-circuit: if header text and preloader already seen, reveal immediately and keep hover only
-    if (isHeadScramble && hasSeenPreloader) {
+    // Short-circuit header after the preloader has already run on a later page
+    if (skipHeadReveal) {
       animatable.forEach(span => {
         span.classList.remove("active-current","active-trail");
         span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
@@ -365,6 +350,10 @@ export function initScramble() {
 
   // If preloader is done -> start now, else wait
   const start = () => {
+    preloaderJustFinished = window.__PRELOADER_JUST_FINISHED === true;
+    if (preloaderJustFinished) {
+      window.__PRELOADER_JUST_FINISHED = false;
+    }
     initAll();
     window.Webflow = window.Webflow || [];
     window.Webflow.push(initAll);

@@ -44,6 +44,7 @@ export function initPreloader() {
   const preSkip = () => preDone();
 
   const preActive = preloaders.length > 0 && sessionStorage.getItem(PRELOADER_KEY) !== "1";
+  const preloaderPlayed = preActive;
 
   if (!preloaders.length) {
     preSkip();
@@ -288,6 +289,9 @@ export function initPreloader() {
       setTimeout(() => {
         preloaders.forEach(el => el.classList.add("is-hidden"));
         setTimeout(() => {
+          if (preloaderPlayed) {
+            window.__PRELOADER_JUST_FINISHED = true;
+          }
           preloaders.forEach(hardRemove);
           document.documentElement.classList.remove("preloader-lock");
           document.body.classList.remove("preloader-lock");
