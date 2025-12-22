@@ -111,6 +111,9 @@ function initPageFade({ durationMs = 2000 } = {}) {
   const wrapper = document.querySelector(".page_wrapper");
   if (!wrapper) return;
 
+  // Hint browser for smoother opacity changes
+  wrapper.style.willChange = "opacity";
+
   const isInternalLink = (link) => {
     if (!link) return false;
     const href = link.getAttribute("href");
@@ -128,6 +131,9 @@ function initPageFade({ durationMs = 2000 } = {}) {
     const link = e.target.closest("a[href]");
     if (!isInternalLink(link)) return;
 
+    // Respect modifier keys/new-tab intent
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
     e.preventDefault();
     const href = link.getAttribute("href");
     wrapper.style.transition = `opacity ${durationMs}ms ease`;
@@ -140,8 +146,24 @@ function initPageFade({ durationMs = 2000 } = {}) {
   }, true);
 }
 
+// Hint browser to prefetch likely next page(s)
+function initPrefetchNext() {
+  const PREFETCH_URLS = [
+    "https://andreas-fejfer.webflow.io/work-index"
+  ];
+  PREFETCH_URLS.forEach(url => {
+    if (!url) return;
+    const link = document.createElement("link");
+    link.rel = "prefetch";
+    link.as = "document";
+    link.href = url;
+    document.head.appendChild(link);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initPageFade();
+  initPrefetchNext();
 
   if (document.body.classList.contains("page-home")) {
     initHomePage();

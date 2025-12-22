@@ -1,6 +1,5 @@
 // js/scramble.js
 export function initScramble() {
-  
 
   const SYMBOLS = ["#","€","&","%","/","*","$","!"];
   const SPEED = 240;
@@ -71,9 +70,9 @@ export function initScramble() {
     const isHeadScramble = el.classList.contains('head') && el.classList.contains('scramble-text');
     const hasSeenPreloader = sessionStorage.getItem('preloader_shown_session') === "1";
 
-    // Optional: mark elements to reveal only once (e.g. headers) using class "scramble-once"
-    // or data-scramble-once-key to scope the session flag.
-    const onceKey = el.dataset.scrambleOnceKey || (el.classList.contains('scramble-once') ? 'default' : null);
+    // Optional: mark elements to reveal only once (e.g. headers) using data-scramble-once-key
+    // (explicit key required; no implicit default grouping)
+    const onceKey = el.dataset.scrambleOnceKey || null;
     const onceFlagKey = onceKey ? `scramble_once:${onceKey}` : null;
     const hasPlayedOnce = onceFlagKey ? sessionStorage.getItem(onceFlagKey) === "1" : false;
 
@@ -214,8 +213,8 @@ export function initScramble() {
       });
     }
 
-    const loadDelay = readVarMs(el, "--scramble-load-delay", 0) + GLOBAL_PAGELOAD_OFFSET;
-    const loopStartDelay = readVarMs(el, "--scramble-loop-start-delay", 0) + GLOBAL_PAGELOAD_OFFSET;
+    const loadDelay = readVarMs(el, "--scramble-load-delay", 0);
+    const loopStartDelay = readVarMs(el, "--scramble-loop-start-delay", 0);
     const loopPause = readVarMs(el, "--scramble-loop-pause", LOOP_DELAY);
 
     // Short-circuit header/once-marked elements after the preloader on later pages
@@ -252,7 +251,6 @@ export function initScramble() {
   }
 
   // IntersectionObserver for .scramble-scroll
-  let scrambleScrollObserver;
   function initAll(){
     
     document.querySelectorAll(".scramble-text").forEach(initOne);

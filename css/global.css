@@ -49,3 +49,6 @@ html.preloader-lock, body.preloader-lock{height:100%;overflow:hidden}
 
 /* Prevent main scramble flash before script runs */
 html.preloader-active .scramble-text{visibility:hidden}
+
+/* Keep page wrapper fades smooth */
+.page_wrapper{will-change:opacity}
