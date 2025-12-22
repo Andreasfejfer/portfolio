@@ -103,7 +103,46 @@ import { initHomePage } from "./page-home.js";
 import { initPreloader } from "./preloader.js";
 import { initScramble } from "./scramble.js";
 
+// Simple page fade-out on internal navigation (no fade-in to avoid header flicker)
+function initPageFade({ durationMs = 2000 } = {}) {
+  if (window.__PAGE_FADE_BOUND) return;
+  window.__PAGE_FADE_BOUND = true;
+
+  const wrapper = document.querySelector(".page_wrapper");
+  if (!wrapper) return;
+
+  const isInternalLink = (link) => {
+    if (!link) return false;
+    const href = link.getAttribute("href");
+    if (!href) return false;
+    if (href.startsWith("#")) return false;
+    if (href.startsWith("mailto:")) return false;
+    if (href.startsWith("tel:")) return false;
+    if (link.target === "_blank") return false;
+    if (link.hasAttribute("download")) return false;
+    if (link.hostname && link.hostname !== window.location.hostname) return false;
+    return true;
+  };
+
+  document.addEventListener("click", (e) => {
+    const link = e.target.closest("a[href]");
+    if (!isInternalLink(link)) return;
+
+    e.preventDefault();
+    const href = link.getAttribute("href");
+    wrapper.style.transition = `opacity ${durationMs}ms ease`;
+    requestAnimationFrame(() => {
+      wrapper.style.opacity = "0";
+    });
+    setTimeout(() => {
+      window.location.href = href;
+    }, durationMs);
+  }, true);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  initPageFade();
+
   if (document.body.classList.contains("page-home")) {
     initHomePage();
     return;
