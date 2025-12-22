@@ -1,6 +1,6 @@
 // js/scramble.js
 export function initScramble() {
-  console.log("Scramble init");
+  
 
   const SYMBOLS = ["#","€","&","%","/","*","$","!"];
   const SPEED = 240;
@@ -82,21 +82,7 @@ export function initScramble() {
     const skipAfterPreloader = hasSeenPreloader && !preloaderJustFinished && (isHeadScramble || !!onceFlagKey);
     const skipOnceReveal = hasPlayedOnce && !preloaderJustFinished;
 
-    console.log(
-      "[scramble] initOne",
-      {
-        path: window.location.pathname,
-        isHeadScramble,
-        hasSeenPreloader,
-        preloaderJustFinished,
-        onceKey,
-        onceFlagKey,
-        hasPlayedOnce,
-        skipAfterPreloader,
-        skipOnceReveal,
-        el: el.outerHTML.slice(0, 200)
-      }
-    );
+    
 
     // hide until entry reveal begins (unless we short-circuit for head after preloader)
     el.style.visibility = "hidden";
@@ -268,6 +254,7 @@ export function initScramble() {
   // IntersectionObserver for .scramble-scroll
   let scrambleScrollObserver;
   function initAll(){
+    
     document.querySelectorAll(".scramble-text").forEach(initOne);
     // Scramble-scroll logic
     const scrollEls = Array.from(document.querySelectorAll('.scramble-scroll'));
@@ -335,9 +322,7 @@ export function initScramble() {
             if (completed >= animatable.length){
               running = false;
               clearTimers(loadTimers);
-              if (onceFlagKey) {
-                sessionStorage.setItem(onceFlagKey, "1");
-              }
+              
               if (typeof onDone === "function") onDone();
             }
           }, revealTime));
@@ -379,6 +364,7 @@ export function initScramble() {
 
   // If preloader is done -> start now, else wait
   const start = () => {
+  
     preloaderJustFinished = window.__PRELOADER_JUST_FINISHED === true;
     if (preloaderJustFinished) {
       window.__PRELOADER_JUST_FINISHED = false;
