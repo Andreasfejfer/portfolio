@@ -70,7 +70,16 @@ export function initScramble() {
 
     const isHeadScramble = el.classList.contains('head') && el.classList.contains('scramble-text');
     const hasSeenPreloader = sessionStorage.getItem('preloader_shown_session') === "1";
+
+    // Optional: mark elements to reveal only once (e.g. headers) using class "scramble-once"
+    // or data-scramble-once-key to scope the session flag.
+    const onceKey = el.dataset.scrambleOnceKey || (el.classList.contains('scramble-once') ? 'default' : null);
+    const onceFlagKey = onceKey ? `scramble_once:${onceKey}` : null;
+    const hasPlayedOnce = onceFlagKey ? sessionStorage.getItem(onceFlagKey) === "1" : false;
+
+    // Skip entry animation on internal navigations after preloader for headers or explicit once-marked elements
     const skipHeadReveal = isHeadScramble && hasSeenPreloader && !preloaderJustFinished;
+    const skipOnceReveal = hasPlayedOnce && !preloaderJustFinished;
 
     // hide until entry reveal begins (unless we short-circuit for head after preloader)
     el.style.visibility = "hidden";
@@ -206,8 +215,8 @@ export function initScramble() {
     const loopStartDelay = readVarMs(el, "--scramble-loop-start-delay", 0) + GLOBAL_PAGELOAD_OFFSET;
     const loopPause = readVarMs(el, "--scramble-loop-pause", LOOP_DELAY);
 
-    // Short-circuit header after the preloader has already run on a later page
-    if (skipHeadReveal) {
+    // Short-circuit header/once-marked elements after the preloader on later pages
+    if (skipHeadReveal || skipOnceReveal) {
       animatable.forEach(span => {
         span.classList.remove("active-current","active-trail");
         span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
@@ -309,6 +318,9 @@ export function initScramble() {
             if (completed >= animatable.length){
               running = false;
               clearTimers(loadTimers);
+              if (onceFlagKey) {
+                sessionStorage.setItem(onceFlagKey, "1");
+              }
               if (typeof onDone === "function") onDone();
             }
           }, revealTime));
