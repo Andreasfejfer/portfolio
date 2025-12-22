@@ -33,8 +33,6 @@ export function initScramble() {
       el.dataset.scrambleScrollVisible = '0';
     }
 
-
-
     // Scramble only text nodes, preserve child elements (e.g. <span>, <br>),
     // but collect all animatable spans in document order for unified animation
     const originalNodes = Array.from(el.childNodes);
@@ -91,6 +89,21 @@ export function initScramble() {
         s.classList.remove("active-current","active-trail");
         s.textContent = "\u00A0";
       });
+
+      // Only animate header text on first page load
+      if (el.classList.contains('head') && el.classList.contains('scramble-text')) {
+        if (sessionStorage.getItem('preloader_shown_session') === "1") {
+          // Reveal instantly, no animation
+          animatable.forEach(span => {
+            span.classList.remove("active-current","active-trail");
+            span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
+          });
+          running = false;
+          clearTimers(loadTimers);
+          if (typeof onDone === "function") onDone();
+          return;
+        }
+      }
 
       const overlap = 0.6;
       const baseStagger = Math.max(12, Math.round(SPEED * (1 - overlap)));
