@@ -82,6 +82,19 @@ export function initScramble() {
     const skipAfterPreloader = hasSeenPreloader && !preloaderJustFinished && (isHeadScramble || !!onceFlagKey);
     const skipOnceReveal = hasPlayedOnce && !preloaderJustFinished;
 
+    if (isHeadScramble || onceFlagKey) {
+      console.log("[scramble] header/once init", {
+        path: window.location.pathname,
+        hasSeenPreloader,
+        preloaderJustFinished,
+        isHeadScramble,
+        onceKey,
+        hasPlayedOnce,
+        skipAfterPreloader,
+        skipOnceReveal
+      });
+    }
+
     // hide until entry reveal begins (unless we short-circuit for head after preloader)
     el.style.visibility = "hidden";
 
