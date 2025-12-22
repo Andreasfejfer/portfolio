@@ -47,10 +47,12 @@ export function initPreloader() {
   const preloaderPlayed = preActive;
 
   if (!preloaders.length) {
+    sessionStorage.setItem(PRELOADER_KEY, "1");
     preSkip();
     return;
   }
   if (!preActive) {
+    sessionStorage.setItem(PRELOADER_KEY, "1");
     preloaders.forEach(hardRemove);
     preSkip();
     return;

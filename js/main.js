@@ -100,9 +100,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 import "./core.js";
 import { initHomePage } from "./page-home.js";
+import { initPreloader } from "./preloader.js";
+import { initScramble } from "./scramble.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   if (document.body.classList.contains("page-home")) {
     initHomePage();
+    return;
   }
+
+  // For other pages, still initialize preloader (no-ops if absent) and scramble
+  initPreloader();
+  initScramble();
 });
