@@ -92,7 +92,7 @@ export function initScramble() {
 
       // Only animate header text on first page load
       if (el.classList.contains('head') && el.classList.contains('scramble-text')) {
-        if (sessionStorage.getItem('preloader_shown_session') === "1") {
+        if (sessionStorage.getItem('preloader_shown_session') !== "1") {
           // Reveal instantly, no animation
           animatable.forEach(span => {
             span.classList.remove("active-current","active-trail");
