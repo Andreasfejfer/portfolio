@@ -1,5 +1,6 @@
 const PAIR_GAP_PX = 20;
 const PAIRS_PER_20VW = 3;
+const MIN_PAIR_SPACING_PX = 80;
 const LINE_SELECTOR = ".background__line";
 
 export function initBackground() {
@@ -8,17 +9,16 @@ export function initBackground() {
   root.dataset.backgroundInit = "1";
 
   const render = () => {
-    const viewportWidth = Math.max(
-      window.innerWidth || 0,
-      document.documentElement.clientWidth || 0,
-      1
-    );
-    const pairSpacing = (viewportWidth * 0.2) / PAIRS_PER_20VW; // 3 pairs every 20vw
+    const availableWidth = Math.max(root.clientWidth || 0, 1);
     const styles = getComputedStyle(root);
     const paddingLeft = parseFloat(styles.paddingLeft) || 0;
     const paddingRight = parseFloat(styles.paddingRight) || 0;
-    const available = root.clientWidth - paddingLeft - paddingRight;
-    if (available <= 0 || !Number.isFinite(pairSpacing) || pairSpacing <= 0) return;
+    const available = availableWidth - paddingLeft - paddingRight;
+    if (available <= 0) return;
+
+    // Base spacing: 3 pairs every 20vw of the drawable area; clamp to keep at least 80px between pairs
+    const baseSpacing = (available * 0.2) / PAIRS_PER_20VW;
+    const pairSpacing = Math.max(baseSpacing, MIN_PAIR_SPACING_PX);
 
     let pairCount = Math.max(1, Math.round(available / pairSpacing));
     if (pairCount % 2 === 0) pairCount += 1; // ensure a center pair
