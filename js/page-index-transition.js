@@ -2,6 +2,7 @@ const DEFAULTS = {
   trackSelector: ".marquee_track",
   triggerSelector: "a, img.marquee_img",
   richSelector: "[data-marquee-rich]",
+  titleSourceSelector: ".s-title",
   titleAttr: "data-marquee-title",
   richAttr: "data-marquee-rich",
   navigateDelay: 950,
@@ -58,6 +59,7 @@ function readRich(trigger, options) {
   if (!trigger) return "";
   const root =
     trigger.closest("[data-marquee-item]") ||
+    trigger.closest(".w-dyn-item") ||
     trigger.closest("a") ||
     trigger.parentElement;
 
@@ -73,6 +75,20 @@ function readRich(trigger, options) {
   if (fromNode) return fromNode.innerHTML;
 
   return "";
+}
+
+function findTitleSource(trigger, options) {
+  if (!trigger) return null;
+  const root =
+    trigger.closest("[data-marquee-item]") ||
+    trigger.closest(".w-dyn-item") ||
+    trigger.closest("a") ||
+    trigger.parentElement;
+  if (!root) return null;
+  return (
+    root.querySelector("[data-title-source]") ||
+    root.querySelector(options.titleSourceSelector)
+  );
 }
 
 export function initMarqueeTransition(userOptions = {}) {
@@ -125,7 +141,8 @@ export function initMarqueeTransition(userOptions = {}) {
     overlay.container.classList.add("is-active");
     body.classList.add("is-marquee-transition-open");
 
-    const rect = trigger.getBoundingClientRect();
+    const startEl = findTitleSource(trigger, options) || trigger;
+    const rect = startEl.getBoundingClientRect();
     const startX = rect.left + rect.width / 2;
     const startY = rect.top + rect.height / 2;
     const targetX = window.innerWidth / 2;
