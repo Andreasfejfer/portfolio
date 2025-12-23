@@ -156,8 +156,7 @@ function initMarqueeTitleFloat({
   itemSelector = ".w-dyn-item",
   targetTop = "8rem",
   fadeDurationMs = 2000,
-  scrollWaitMs = 350,
-  extraNavDelayMs = 120
+  extraNavDelayMs = 800
 } = {}) {
   const tracks = Array.from(document.querySelectorAll(trackSelector));
   if (!tracks.length) return;
@@ -167,6 +166,31 @@ function initMarqueeTitleFloat({
 
   function storeReturn(scrollY) {
     sessionStorage.setItem(RETURN_KEY, JSON.stringify({ y: scrollY }));
+  }
+
+   // Simple smooth scroll with ease-in-out
+  function smoothScrollTo(y, duration = 1200) {
+    const start = window.scrollY;
+    const dist = y - start;
+    if (Math.abs(dist) < 1 || duration <= 0) {
+      window.scrollTo(0, y);
+      return Promise.resolve();
+    }
+    const startTime = performance.now();
+    return new Promise(resolve => {
+      function step(now) {
+        const t = Math.min(1, (now - startTime) / duration);
+        // easeInOutSine
+        const eased = -(Math.cos(Math.PI * t) - 1) / 2;
+        window.scrollTo(0, start + dist * eased);
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          resolve();
+        }
+      }
+      requestAnimationFrame(step);
+    });
   }
 
   tracks.forEach(track => {
@@ -187,8 +211,6 @@ function initMarqueeTitleFloat({
 
       const targetY = Math.max(0, (item.getBoundingClientRect().top + window.scrollY));
       storeReturn(targetY);
-      window.scrollTo({ top: targetY, behavior: "smooth" });
-
       const rect = titleEl.getBoundingClientRect();
       const clone = titleEl.cloneNode(true);
       Object.assign(clone.style, {
@@ -203,7 +225,9 @@ function initMarqueeTitleFloat({
       });
       document.body.appendChild(clone);
 
-      const run = () => {
+      // Scroll, then float title, then fade+navigate
+      const scrollDuration = 1200; // keep in sync with fade/float for ~4s total
+      smoothScrollTo(targetY, scrollDuration).then(() => {
         if (typeof gsap !== "undefined") {
           gsap.to(clone, {
             duration: 0.6,
@@ -229,9 +253,7 @@ function initMarqueeTitleFloat({
         setTimeout(() => {
           window.location.href = link.href;
         }, fadeDurationMs + extraNavDelayMs);
-      };
-
-      setTimeout(run, scrollWaitMs);
+      });
     });
   });
 }
