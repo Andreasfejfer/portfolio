@@ -135,11 +135,9 @@ html.preloader-active .scramble-text{visibility:hidden}
 /* Vertical dashed background pairs */
 .background{
   position:fixed;
-  top:0;
-  bottom:0;
-  left:50%;
-  width:70vw; /* leaves 15vw padding on each side of the viewport */
-  transform:translateX(-50%);
+  inset:0;
+  padding:0 15vw;
+  box-sizing:border-box;
   pointer-events:none;
   z-index:0;
   overflow:hidden;

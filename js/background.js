@@ -10,14 +10,17 @@ export function initBackground() {
   const render = () => {
     const vw = Math.max(window.innerWidth, 1);
     const pairSpacing = (vw * 0.2) / PAIRS_PER_20VW; // 20vw split into 3 pairs
-    const available = root.clientWidth;
-    if (!available || !Number.isFinite(pairSpacing) || pairSpacing <= 0) return;
+    const styles = getComputedStyle(root);
+    const paddingLeft = parseFloat(styles.paddingLeft) || 0;
+    const paddingRight = parseFloat(styles.paddingRight) || 0;
+    const available = root.clientWidth - paddingLeft - paddingRight;
+    if (available <= 0 || !Number.isFinite(pairSpacing) || pairSpacing <= 0) return;
 
     let pairCount = Math.max(1, Math.round(available / pairSpacing));
     if (pairCount % 2 === 0) pairCount += 1; // ensure a center pair
 
     const totalSpan = (pairCount - 1) * pairSpacing;
-    const start = (available - totalSpan) / 2;
+    const start = paddingLeft + (available - totalSpan) / 2;
 
     const frag = document.createDocumentFragment();
 
