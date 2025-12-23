@@ -322,8 +322,24 @@ function initCmsReturnTitleFloat({
       e.preventDefault();
 
       const titleEl = document.querySelector(titleSelector);
+      const runFadeOnly = () => new Promise(resolve => {
+        if (wrapper) {
+          wrapper.style.willChange = "opacity";
+          wrapper.style.opacity = "1";
+          wrapper.style.transition = `opacity ${fadeDurationMs}ms cubic-bezier(0.4, 0.0, 0.2, 1)`;
+          requestAnimationFrame(() => { wrapper.style.opacity = "0"; });
+          setTimeout(resolve, fadeDurationMs + 10);
+        } else {
+          resolve();
+        }
+      });
+
       if (!titleEl) {
-        window.location.href = link.href;
+        runFadeOnly().then(() => {
+          setTimeout(() => {
+            window.location.href = link.href;
+          }, extraNavDelayMs);
+        });
         return;
       }
 
@@ -364,17 +380,7 @@ function initCmsReturnTitleFloat({
         }
       });
 
-      const fadePromise = new Promise(resolve => {
-        if (wrapper) {
-          wrapper.style.willChange = "opacity";
-          wrapper.style.opacity = "1";
-          wrapper.style.transition = `opacity ${fadeDurationMs}ms cubic-bezier(0.4, 0.0, 0.2, 1)`;
-          requestAnimationFrame(() => { wrapper.style.opacity = "0"; });
-          setTimeout(resolve, fadeDurationMs + 10);
-        } else {
-          resolve();
-        }
-      });
+      const fadePromise = runFadeOnly();
 
       Promise.all([floatPromise, fadePromise]).then(() => {
         setTimeout(() => {
