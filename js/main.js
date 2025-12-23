@@ -446,7 +446,7 @@ document.addEventListener("DOMContentLoaded", () => {
         window.scrollTo({ top: returnData.y, behavior: "auto" });
         if (wrapper) {
           requestAnimationFrame(() => {
-            wrapper.style.transition = "opacity 800ms ease";
+            wrapper.style.transition = "opacity 1800ms ease";
             wrapper.style.opacity = "1";
           });
         }
