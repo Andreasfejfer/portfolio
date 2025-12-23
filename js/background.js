@@ -8,8 +8,12 @@ export function initBackground() {
   root.dataset.backgroundInit = "1";
 
   const render = () => {
-    const vw = Math.max(window.innerWidth, 1);
-    const pairSpacing = (vw * 0.2) / PAIRS_PER_20VW; // 20vw split into 3 pairs
+    const viewportWidth = Math.max(
+      window.innerWidth || 0,
+      document.documentElement.clientWidth || 0,
+      1
+    );
+    const pairSpacing = (viewportWidth * 0.2) / PAIRS_PER_20VW; // 3 pairs every 20vw
     const styles = getComputedStyle(root);
     const paddingLeft = parseFloat(styles.paddingLeft) || 0;
     const paddingRight = parseFloat(styles.paddingRight) || 0;
