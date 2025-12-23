@@ -96,6 +96,7 @@ async function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14
 document.addEventListener('DOMContentLoaded', () => {
   if (document.body.classList.contains('page-index')) {
     initGsapMarquee({ trackSelector: '.marquee_track', duration: 30 });
+    initMarqueeTransition();
   }
 });
 import "./core.js";
@@ -104,6 +105,7 @@ import { initPreloader } from "./preloader.js";
 import { initScramble } from "./scramble.js";
 import { initRepet } from "./repet.js";
 import { initBackground } from "./background.js";
+import { initMarqueeTransition } from "./page-index-transition.js";
 
 // Simple page fade-out on internal navigation (no fade-in to avoid header flicker)
 function initPageFade({ durationMs = 2000 } = {}) {
@@ -126,6 +128,7 @@ function initPageFade({ durationMs = 2000 } = {}) {
     if (link.target === "_blank") return false;
     if (link.hasAttribute("download")) return false;
     if (link.hostname && link.hostname !== window.location.hostname) return false;
+    if (link.closest("[data-skip-page-fade=\"1\"]")) return false;
     return true;
   };
 
