@@ -251,42 +251,45 @@ function initMarqueeTitleFloat({
       titleEl.style.visibility = "hidden";
       document.body.appendChild(clone);
 
-      const floatPromise = () => {
-        return new Promise(resolve => {
-          if (typeof gsap !== "undefined") {
-            gsap.to(clone, {
-              duration: 0.6,
-              ease: "power3.out",
-              top: targetTop,
-              left: targetLeft,
-              xPercent: 0,
-              yPercent: 0,
-              onComplete: resolve
-            });
-          } else {
+      const scrollDuration = 1200;
+
+      const floatPromise = new Promise(resolve => {
+        if (typeof gsap !== "undefined") {
+          gsap.to(clone, {
+            duration: scrollDuration / 1000,
+            ease: "power3.inOut",
+            top: targetTop,
+            left: targetLeft,
+            xPercent: 0,
+            yPercent: 0,
+            onComplete: resolve
+          });
+        } else {
+          clone.style.transition = `all ${scrollDuration}ms ease-in-out`;
+          requestAnimationFrame(() => {
             clone.style.top = targetTop;
             clone.style.left = targetLeft;
             clone.style.transform = "translate(0, 0)";
-            resolve();
-          }
-        });
-      };
+          });
+          setTimeout(resolve, scrollDuration);
+        }
+      });
 
-      // Float title first, then scroll, then fade + navigate
-      const scrollDuration = 1200;
-      floatPromise()
-        .then(() => smoothScrollTo(targetY, scrollDuration))
-        .then(() => {
-          if (wrapper) {
-            wrapper.style.transition = `opacity ${fadeDurationMs}ms ease`;
-            requestAnimationFrame(() => {
-              wrapper.style.opacity = "0";
-            });
-          }
-          setTimeout(() => {
-            window.location.href = link.href;
-          }, fadeDurationMs + extraNavDelayMs);
-        });
+      // Float and scroll together, then fade + navigate
+      Promise.all([
+        floatPromise,
+        smoothScrollTo(targetY, scrollDuration)
+      ]).then(() => {
+        if (wrapper) {
+          wrapper.style.transition = `opacity ${fadeDurationMs}ms ease`;
+          requestAnimationFrame(() => {
+            wrapper.style.opacity = "0";
+          });
+        }
+        setTimeout(() => {
+          window.location.href = link.href;
+        }, fadeDurationMs + extraNavDelayMs);
+      });
     });
   });
 }
