@@ -1,6 +1,28 @@
 // GSAP Marquee Animation with Perfect Loop
 // Requires GSAP to be loaded globally (via CDN in Webflow footer)
 
+let __PAGE_INDEX_RETURN_Y = null;
+(function primeReturnScroll() {
+  try {
+    const data = sessionStorage.getItem("page_index_return");
+    if (!data) return;
+    const parsed = JSON.parse(data);
+    sessionStorage.removeItem("page_index_return");
+    if (parsed && typeof parsed.y === "number" && isFinite(parsed.y)) {
+      __PAGE_INDEX_RETURN_Y = parsed.y;
+      // Try to jump immediately to reduce flicker
+      window.scrollTo(0, parsed.y);
+      const wrapper = document.querySelector(".page_wrapper");
+      if (wrapper) {
+        wrapper.style.opacity = "0";
+        wrapper.style.willChange = "opacity";
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+})();
+
 
 function waitForImages(track) {
   const images = Array.from(track.querySelectorAll('img'));
@@ -425,32 +447,20 @@ document.addEventListener("DOMContentLoaded", () => {
   // Restore index scroll on return
   if (document.body.classList.contains("page-index")) {
     const wrapper = document.querySelector(".page_wrapper");
-    let returnData = null;
-    try {
-      const data = sessionStorage.getItem("page_index_return");
-      if (data) {
-        returnData = JSON.parse(data);
-        sessionStorage.removeItem("page_index_return");
+    const y = __PAGE_INDEX_RETURN_Y;
+    if (y !== null) {
+      if (wrapper) {
+        wrapper.style.opacity = "0";
+        wrapper.style.willChange = "opacity";
       }
-    } catch (err) {
-      // ignore
-    }
-
-    if (returnData && wrapper) {
-      wrapper.style.opacity = "0";
-      wrapper.style.willChange = "opacity";
-    }
-
-    if (returnData && typeof returnData.y === "number" && isFinite(returnData.y)) {
-      setTimeout(() => {
-        window.scrollTo({ top: returnData.y, behavior: "auto" });
+      // Ensure we're at the right spot before showing
+      window.scrollTo(0, y);
+      requestAnimationFrame(() => {
         if (wrapper) {
-          requestAnimationFrame(() => {
-            wrapper.style.transition = "opacity 1800ms ease";
-            wrapper.style.opacity = "1";
-          });
+          wrapper.style.transition = "opacity 1800ms ease";
+          wrapper.style.opacity = "1";
         }
-      }, 50);
+      });
     }
   }
 });
