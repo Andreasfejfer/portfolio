@@ -3,23 +3,32 @@
 
 let __PAGE_INDEX_RETURN_Y = null;
 (function primeReturnScroll() {
-  try {
-    const data = sessionStorage.getItem("page_index_return");
-    if (!data) return;
-    const parsed = JSON.parse(data);
-    sessionStorage.removeItem("page_index_return");
-    if (parsed && typeof parsed.y === "number" && isFinite(parsed.y)) {
-      __PAGE_INDEX_RETURN_Y = parsed.y;
-      // Try to jump immediately to reduce flicker
-      window.scrollTo(0, parsed.y);
-      const wrapper = document.querySelector(".page_wrapper");
-      if (wrapper) {
-        wrapper.style.opacity = "0";
-        wrapper.style.willChange = "opacity";
+  function run() {
+    const body = document.body;
+    if (!body || !body.classList.contains("page-index")) return;
+    try {
+      const data = sessionStorage.getItem("page_index_return");
+      if (!data) return;
+      const parsed = JSON.parse(data);
+      if (parsed && typeof parsed.y === "number" && isFinite(parsed.y)) {
+        __PAGE_INDEX_RETURN_Y = parsed.y;
+        sessionStorage.removeItem("page_index_return");
+        // Try to jump immediately to reduce flicker
+        window.scrollTo(0, parsed.y);
+        const wrapper = document.querySelector(".page_wrapper");
+        if (wrapper) {
+          wrapper.style.opacity = "0";
+          wrapper.style.willChange = "opacity";
+        }
       }
+    } catch (e) {
+      // ignore
     }
-  } catch (e) {
-    // ignore
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run, { once: true });
+  } else {
+    run();
   }
 })();
 
