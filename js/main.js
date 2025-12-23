@@ -20,6 +20,9 @@ let __PAGE_INDEX_RETURN_Y = null;
           wrapper.style.opacity = "0";
           wrapper.style.willChange = "opacity";
         }
+        // Hide the document briefly to avoid showing the top before scroll snaps
+        document.documentElement.style.visibility = "hidden";
+        document.documentElement.dataset.returningIndex = "1";
       }
     } catch (e) {
       // ignore
@@ -465,6 +468,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // Ensure we're at the right spot before showing
       window.scrollTo(0, y);
       requestAnimationFrame(() => {
+        document.documentElement.style.visibility = "visible";
+        delete document.documentElement.dataset.returningIndex;
         if (wrapper) {
           wrapper.style.transition = "opacity 1800ms ease";
           wrapper.style.opacity = "1";
