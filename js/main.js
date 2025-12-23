@@ -253,7 +253,7 @@ function initMarqueeTitleFloat({
 
       const scrollDuration = 1200;
 
-      const floatPromise = new Promise(resolve => {
+      const runFloat = () => new Promise(resolve => {
         if (typeof gsap !== "undefined") {
           gsap.to(clone, {
             duration: scrollDuration / 1000,
@@ -275,21 +275,20 @@ function initMarqueeTitleFloat({
         }
       });
 
-      // Float and scroll together, then fade + navigate
-      Promise.all([
-        floatPromise,
-        smoothScrollTo(targetY, scrollDuration)
-      ]).then(() => {
-        if (wrapper) {
-          wrapper.style.transition = `opacity ${fadeDurationMs}ms ease`;
-          requestAnimationFrame(() => {
-            wrapper.style.opacity = "0";
-          });
-        }
-        setTimeout(() => {
-          window.location.href = link.href;
-        }, fadeDurationMs + extraNavDelayMs);
-      });
+      // Scroll first, then float, then fade + navigate
+      smoothScrollTo(targetY, scrollDuration)
+        .then(() => runFloat())
+        .then(() => {
+          if (wrapper) {
+            wrapper.style.transition = `opacity ${fadeDurationMs}ms ease`;
+            requestAnimationFrame(() => {
+              wrapper.style.opacity = "0";
+            });
+          }
+          setTimeout(() => {
+            window.location.href = link.href;
+          }, fadeDurationMs + extraNavDelayMs);
+        });
     });
   });
 }
