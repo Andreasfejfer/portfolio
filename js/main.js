@@ -424,19 +424,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Restore index scroll on return
   if (document.body.classList.contains("page-index")) {
+    const wrapper = document.querySelector(".page_wrapper");
+    let returnData = null;
     try {
       const data = sessionStorage.getItem("page_index_return");
       if (data) {
-        const parsed = JSON.parse(data);
+        returnData = JSON.parse(data);
         sessionStorage.removeItem("page_index_return");
-        if (parsed && typeof parsed.y === "number" && isFinite(parsed.y)) {
-          setTimeout(() => {
-            window.scrollTo({ top: parsed.y, behavior: "auto" });
-          }, 50);
-        }
       }
     } catch (err) {
       // ignore
+    }
+
+    if (returnData && wrapper) {
+      wrapper.style.opacity = "0";
+      wrapper.style.willChange = "opacity";
+    }
+
+    if (returnData && typeof returnData.y === "number" && isFinite(returnData.y)) {
+      setTimeout(() => {
+        window.scrollTo({ top: returnData.y, behavior: "auto" });
+        if (wrapper) {
+          requestAnimationFrame(() => {
+            wrapper.style.transition = "opacity 800ms ease";
+            wrapper.style.opacity = "1";
+          });
+        }
+      }, 50);
     }
   }
 });
