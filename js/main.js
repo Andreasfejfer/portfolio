@@ -223,37 +223,45 @@ function initMarqueeTitleFloat({
         zIndex: "2000",
         whiteSpace: "nowrap"
       });
+      titleEl.style.visibility = "hidden";
       document.body.appendChild(clone);
 
-      // Scroll, then float title, then fade+navigate
-      const scrollDuration = 1200; // keep in sync with fade/float for ~4s total
-      smoothScrollTo(targetY, scrollDuration).then(() => {
-        if (typeof gsap !== "undefined") {
-          gsap.to(clone, {
-            duration: 0.6,
-            ease: "power3.out",
-            top: targetTop,
-            left: "50%",
-            xPercent: -50,
-            yPercent: 0
-          });
-        } else {
-          clone.style.top = targetTop;
-          clone.style.left = "50%";
-          clone.style.transform = "translate(-50%, 0)";
-        }
+      const floatPromise = () => {
+        return new Promise(resolve => {
+          if (typeof gsap !== "undefined") {
+            gsap.to(clone, {
+              duration: 0.6,
+              ease: "power3.out",
+              top: targetTop,
+              left: "50%",
+              xPercent: -50,
+              yPercent: 0,
+              onComplete: resolve
+            });
+          } else {
+            clone.style.top = targetTop;
+            clone.style.left = "50%";
+            clone.style.transform = "translate(-50%, 0)";
+            resolve();
+          }
+        });
+      };
 
-        if (wrapper) {
-          wrapper.style.transition = `opacity ${fadeDurationMs}ms ease`;
-          requestAnimationFrame(() => {
-            wrapper.style.opacity = "0";
-          });
-        }
-
-        setTimeout(() => {
-          window.location.href = link.href;
-        }, fadeDurationMs + extraNavDelayMs);
-      });
+      // Float title first, then scroll, then fade + navigate
+      const scrollDuration = 1200;
+      floatPromise()
+        .then(() => smoothScrollTo(targetY, scrollDuration))
+        .then(() => {
+          if (wrapper) {
+            wrapper.style.transition = `opacity ${fadeDurationMs}ms ease`;
+            requestAnimationFrame(() => {
+              wrapper.style.opacity = "0";
+            });
+          }
+          setTimeout(() => {
+            window.location.href = link.href;
+          }, fadeDurationMs + extraNavDelayMs);
+        });
     });
   });
 }
