@@ -100,6 +100,9 @@
 .scramble-char{box-decoration-break:clone;-webkit-box-decoration-break:clone}
 .scramble-grey .scramble-char.active-current,.scramble-grey .scramble-char.active-trail{background-color:#8b8b8b!important;color:#fff!important}
 
+/* Hide index wrapper until JS reveals (prevents return flicker) */
+body.page-index .page_wrapper{opacity:0}
+
 /* Load delay (ms) before entry reveal starts */
 .scramble-delay-2000{--scramble-load-delay:2000}
 

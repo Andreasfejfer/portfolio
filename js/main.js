@@ -1,6 +1,12 @@
 // GSAP Marquee Animation with Perfect Loop
 // Requires GSAP to be loaded globally (via CDN in Webflow footer)
 
+try {
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+  }
+} catch(e){}
+
 let __PAGE_INDEX_RETURN_Y = null;
 (function primeReturnScroll() {
   function run() {
@@ -486,6 +492,14 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
       }, 500);
+    } else if (wrapper) {
+      // Normal load: reveal after a tiny delay to avoid flash
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          wrapper.style.transition = "opacity 600ms ease";
+          wrapper.style.opacity = "1";
+        });
+      }, 100);
     }
   }
 });
