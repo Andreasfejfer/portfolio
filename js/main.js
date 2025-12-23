@@ -302,6 +302,89 @@ function initMarqueeTitleFloat({
   });
 }
 
+function initCmsReturnTitleFloat({
+  linkSelector = ".return-index",
+  titleSelector = ".s-title",
+  targetLeft = "25vw",
+  fadeDurationMs = 2000,
+  floatDurationMs = 1200,
+  extraNavDelayMs = 800
+} = {}) {
+  const links = Array.from(document.querySelectorAll(linkSelector));
+  if (!links.length) return;
+
+  const wrapper = document.querySelector(".page_wrapper");
+
+  links.forEach(link => {
+    link.dataset.skipPageFade = "1";
+    link.addEventListener("click", (e) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+
+      const titleEl = document.querySelector(titleSelector);
+      if (!titleEl) {
+        window.location.href = link.href;
+        return;
+      }
+
+      const rect = titleEl.getBoundingClientRect();
+      const clone = titleEl.cloneNode(true);
+      Object.assign(clone.style, {
+        position: "fixed",
+        left: `${rect.left}px`,
+        top: `${rect.top}px`,
+        transform: "translate(0, 0)",
+        margin: "0",
+        pointerEvents: "none",
+        zIndex: "2000",
+        whiteSpace: "nowrap"
+      });
+      titleEl.style.visibility = "hidden";
+      document.body.appendChild(clone);
+
+      const floatPromise = new Promise(resolve => {
+        if (typeof gsap !== "undefined") {
+          gsap.to(clone, {
+            duration: floatDurationMs / 1000,
+            ease: "power3.inOut",
+            top: `${rect.top}px`,
+            left: targetLeft,
+            xPercent: 0,
+            yPercent: 0,
+            onComplete: resolve
+          });
+        } else {
+          clone.style.transition = `all ${floatDurationMs}ms ease-in-out`;
+          requestAnimationFrame(() => {
+            clone.style.top = `${rect.top}px`;
+            clone.style.left = targetLeft;
+            clone.style.transform = "translate(0, 0)";
+          });
+          setTimeout(resolve, floatDurationMs);
+        }
+      });
+
+      const fadePromise = new Promise(resolve => {
+        if (wrapper) {
+          wrapper.style.willChange = "opacity";
+          wrapper.style.opacity = "1";
+          wrapper.style.transition = `opacity ${fadeDurationMs}ms cubic-bezier(0.4, 0.0, 0.2, 1)`;
+          requestAnimationFrame(() => { wrapper.style.opacity = "0"; });
+          setTimeout(resolve, fadeDurationMs + 10);
+        } else {
+          resolve();
+        }
+      });
+
+      Promise.all([floatPromise, fadePromise]).then(() => {
+        setTimeout(() => {
+          window.location.href = link.href;
+        }, extraNavDelayMs);
+      });
+    });
+  });
+}
+
 // Hint browser to prefetch likely next page(s)
 function initPrefetchNext() {
   const PREFETCH_URLS = [
@@ -331,6 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // For other pages, still initialize preloader (no-ops if absent) and scramble
   initPreloader();
   initScramble();
+  initCmsReturnTitleFloat();
 
   // Restore index scroll on return
   if (document.body.classList.contains("page-index")) {
