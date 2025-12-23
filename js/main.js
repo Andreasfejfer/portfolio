@@ -240,9 +240,9 @@ function initMarqueeTitleFloat({
       const clone = titleEl.cloneNode(true);
       Object.assign(clone.style, {
         position: "fixed",
-        left: `${rect.left + rect.width / 2}px`,
-        top: `${rect.top + rect.height / 2}px`,
-        transform: "translate(-50%, -50%)",
+        left: `${rect.left}px`,
+        top: `${rect.top}px`,
+        transform: "translate(0, 0)",
         margin: "0",
         pointerEvents: "none",
         zIndex: "2000",
@@ -259,14 +259,14 @@ function initMarqueeTitleFloat({
               ease: "power3.out",
               top: targetTop,
               left: targetLeft,
-              xPercent: -50,
+              xPercent: 0,
               yPercent: 0,
               onComplete: resolve
             });
           } else {
             clone.style.top = targetTop;
             clone.style.left = targetLeft;
-            clone.style.transform = "translate(-50%, 0)";
+            clone.style.transform = "translate(0, 0)";
             resolve();
           }
         });
