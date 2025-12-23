@@ -52,7 +52,7 @@ function duplicateMarqueeContent(track) {
   track.innerHTML += track.innerHTML;
 }
 
-async function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14 } = {}) {
+async function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14, fadeInDelayMs = 500, fadeInDurationMs = 600 } = {}) {
   const tracks = document.querySelectorAll(trackSelector);
   for (const track of tracks) {
     await waitForImages(track);
@@ -72,6 +72,14 @@ async function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14
       modifiers: {
         x: gsap.utils.unitize(x => parseFloat(x) % totalWidth)
       }
+    });
+    // Fade images in a bit slower
+    images.forEach(img => {
+      img.style.opacity = "0";
+      img.style.transition = `opacity ${fadeInDurationMs}ms ease`;
+      setTimeout(() => {
+        img.style.opacity = "1";
+      }, fadeInDelayMs);
     });
     // Marquee no longer pauses on hover
 
@@ -467,14 +475,17 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       // Ensure we're at the right spot before showing
       window.scrollTo(0, y);
-      requestAnimationFrame(() => {
-        document.documentElement.style.visibility = "visible";
-        delete document.documentElement.dataset.returningIndex;
-        if (wrapper) {
-          wrapper.style.transition = "opacity 1800ms ease";
-          wrapper.style.opacity = "1";
-        }
-      });
+      // Give the browser a moment to settle, then fade in
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          document.documentElement.style.visibility = "visible";
+          delete document.documentElement.dataset.returningIndex;
+          if (wrapper) {
+            wrapper.style.transition = "opacity 1800ms ease";
+            wrapper.style.opacity = "1";
+          }
+        });
+      }, 500);
     }
   }
 });
