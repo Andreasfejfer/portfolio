@@ -1,6 +1,6 @@
 const PAIR_GAP_PX = 20;
 const PAIRS_PER_20VW = 3;
-const MIN_PAIR_SPACING_PX = 80;
+const MIN_PAIR_SPACING_PX = 100;
 const MAX_PAIRS = 11;
 const LINE_SELECTOR = ".background__line";
 
@@ -17,13 +17,22 @@ export function initBackground() {
     const available = availableWidth - paddingLeft - paddingRight;
     if (available <= 0) return;
 
-    // Base spacing: 3 pairs every 20vw of the drawable area; clamp to keep at least 80px between pairs
+    // Base spacing: 3 pairs every 20vw of the drawable area
     const baseSpacing = (available * 0.2) / PAIRS_PER_20VW;
-    const pairSpacing = Math.max(baseSpacing, MIN_PAIR_SPACING_PX);
+    const initialSpacing = Math.max(baseSpacing, MIN_PAIR_SPACING_PX);
+    const targetCount = Math.round(available / initialSpacing);
 
-    let pairCount = Math.max(1, Math.round(available / pairSpacing));
+    let pairCount = Math.max(1, targetCount);
     if (pairCount % 2 === 0) pairCount += 1; // ensure a center pair
     pairCount = Math.min(pairCount, MAX_PAIRS);
+
+    let pairSpacing = pairCount > 1 ? available / (pairCount - 1) : available;
+
+    // If spacing is tighter than MIN_PAIR_SPACING_PX, reduce by 2s (keeps it odd) until it fits
+    while (pairCount > 1 && pairSpacing < MIN_PAIR_SPACING_PX) {
+      pairCount = Math.max(1, pairCount - 2);
+      pairSpacing = pairCount > 1 ? available / (pairCount - 1) : available;
+    }
 
     const totalSpan = (pairCount - 1) * pairSpacing;
     const start = paddingLeft + (available - totalSpan) / 2;
