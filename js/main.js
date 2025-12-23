@@ -154,7 +154,8 @@ function initMarqueeTitleFloat({
   trackSelector = ".marquee_track",
   titleSelector = ".s-title",
   itemSelector = ".w-dyn-item",
-  targetTop = "8rem",
+  targetTop = "40vh",
+  targetLeft = "30vw",
   fadeDurationMs = 2000,
   extraNavDelayMs = 800
 } = {}) {
@@ -168,7 +169,28 @@ function initMarqueeTitleFloat({
     sessionStorage.setItem(RETURN_KEY, JSON.stringify({ y: scrollY }));
   }
 
-   // Simple smooth scroll with ease-in-out
+  // Convert CSS length to px for scroll anchor
+  function resolveToPx(val, axis = "y") {
+    if (typeof val === "number") return val;
+    if (!val || typeof val !== "string") return 0;
+    const num = parseFloat(val);
+    if (!isFinite(num)) return 0;
+    if (val.endsWith("vh")) return (window.innerHeight * num) / 100;
+    if (val.endsWith("vw")) return (window.innerWidth * num) / 100;
+    if (val.endsWith("rem")) {
+      const root = getComputedStyle(document.documentElement).fontSize;
+      const rootPx = parseFloat(root) || 16;
+      return rootPx * num;
+    }
+    if (val.endsWith("em")) {
+      const root = getComputedStyle(document.documentElement).fontSize;
+      const rootPx = parseFloat(root) || 16;
+      return rootPx * num;
+    }
+    return num; // assume px
+  }
+
+  // Simple smooth scroll with ease-in-out
   function smoothScrollTo(y, duration = 1200) {
     const start = window.scrollY;
     const dist = y - start;
@@ -209,7 +231,10 @@ function initMarqueeTitleFloat({
         return;
       }
 
-      const targetY = Math.max(0, (item.getBoundingClientRect().top + window.scrollY));
+      const titleRect = titleEl.getBoundingClientRect();
+      const absTop = titleRect.top + window.scrollY;
+      const targetTopPx = resolveToPx(targetTop, "y");
+      const targetY = Math.max(0, absTop - targetTopPx);
       storeReturn(targetY);
       const rect = titleEl.getBoundingClientRect();
       const clone = titleEl.cloneNode(true);
@@ -233,14 +258,14 @@ function initMarqueeTitleFloat({
               duration: 0.6,
               ease: "power3.out",
               top: targetTop,
-              left: "50%",
+              left: targetLeft,
               xPercent: -50,
               yPercent: 0,
               onComplete: resolve
             });
           } else {
             clone.style.top = targetTop;
-            clone.style.left = "50%";
+            clone.style.left = targetLeft;
             clone.style.transform = "translate(-50%, 0)";
             resolve();
           }
