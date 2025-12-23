@@ -282,11 +282,11 @@ function initMarqueeTitleFloat({
         .then(() => {
           const fadePromise = new Promise(resolve => {
             if (wrapper) {
-              wrapper.style.transition = `opacity ${fadeDurationMs}ms ease`;
-              requestAnimationFrame(() => {
-                wrapper.style.opacity = "0";
-              });
-              setTimeout(resolve, fadeDurationMs);
+              wrapper.style.willChange = "opacity";
+              wrapper.style.opacity = "1";
+              wrapper.style.transition = `opacity ${fadeDurationMs}ms cubic-bezier(0.4, 0.0, 0.2, 1)`;
+              requestAnimationFrame(() => { wrapper.style.opacity = "0"; });
+              setTimeout(resolve, fadeDurationMs + 10);
             } else {
               resolve();
             }
