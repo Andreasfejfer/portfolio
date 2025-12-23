@@ -352,6 +352,9 @@ function initMarqueeTitleFloat({
 
 function initCmsReturnTitleFloat({
   linkSelector = ".return-index",
+  titleSelector = ".s-title",
+  targetLeft = "25vw",
+  floatDurationMs = 1200,
   fadeDurationMs = 2000,
   extraNavDelayMs = 800
 } = {}) {
@@ -366,6 +369,8 @@ function initCmsReturnTitleFloat({
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
 
+      const titleEl = document.querySelector(titleSelector);
+
       const fadePromise = new Promise(resolve => {
         if (wrapper) {
           wrapper.style.willChange = "opacity";
@@ -378,7 +383,53 @@ function initCmsReturnTitleFloat({
         }
       });
 
-      fadePromise.then(() => {
+      if (!titleEl) {
+        fadePromise.then(() => {
+          setTimeout(() => {
+            window.location.href = link.href;
+          }, extraNavDelayMs);
+        });
+        return;
+      }
+
+      const rect = titleEl.getBoundingClientRect();
+      const clone = titleEl.cloneNode(true);
+      Object.assign(clone.style, {
+        position: "fixed",
+        left: `${rect.left}px`,
+        top: `${rect.top}px`,
+        transform: "translate(0, 0)",
+        margin: "0",
+        pointerEvents: "none",
+        zIndex: "2000",
+        whiteSpace: "nowrap",
+        opacity: "1"
+      });
+      document.body.appendChild(clone);
+
+      const floatPromise = new Promise(resolve => {
+        if (typeof gsap !== "undefined") {
+          gsap.to(clone, {
+            duration: floatDurationMs / 1000,
+            ease: "power3.inOut",
+            top: `${rect.top}px`,
+            left: targetLeft,
+            xPercent: 0,
+            yPercent: 0,
+            onComplete: resolve
+          });
+        } else {
+          clone.style.transition = `all ${floatDurationMs}ms ease-in-out`;
+          requestAnimationFrame(() => {
+            clone.style.top = `${rect.top}px`;
+            clone.style.left = targetLeft;
+            clone.style.transform = "translate(0, 0)";
+          });
+          setTimeout(resolve, floatDurationMs);
+        }
+      });
+
+      Promise.all([fadePromise, floatPromise]).then(() => {
         setTimeout(() => {
           window.location.href = link.href;
         }, extraNavDelayMs);
