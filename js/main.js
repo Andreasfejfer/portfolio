@@ -277,19 +277,26 @@ function initMarqueeTitleFloat({
         }
       });
 
-      // Scroll first (title moves naturally), then float horizontally, then fade + navigate
+      // Scroll first (title moves naturally), then float horizontally + fade together, then navigate
       smoothScrollTo(targetY, scrollDuration)
-        .then(() => runFloat())
         .then(() => {
-          if (wrapper) {
-            wrapper.style.transition = `opacity ${fadeDurationMs}ms ease`;
-            requestAnimationFrame(() => {
-              wrapper.style.opacity = "0";
-            });
-          }
+          const fadePromise = new Promise(resolve => {
+            if (wrapper) {
+              wrapper.style.transition = `opacity ${fadeDurationMs}ms ease`;
+              requestAnimationFrame(() => {
+                wrapper.style.opacity = "0";
+              });
+              setTimeout(resolve, fadeDurationMs);
+            } else {
+              resolve();
+            }
+          });
+          return Promise.all([runFloat(), fadePromise]);
+        })
+        .then(() => {
           setTimeout(() => {
             window.location.href = link.href;
-          }, fadeDurationMs + extraNavDelayMs);
+          }, extraNavDelayMs);
         });
     });
   });
