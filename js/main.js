@@ -236,29 +236,31 @@ function initMarqueeTitleFloat({
       const targetTopPx = resolveToPx(targetTop, "y");
       const targetY = Math.max(0, absTop - targetTopPx);
       storeReturn(targetY);
-      const rect = titleEl.getBoundingClientRect();
-      const clone = titleEl.cloneNode(true);
-      Object.assign(clone.style, {
-        position: "fixed",
-        left: `${rect.left}px`,
-        top: `${rect.top}px`,
-        transform: "translate(0, 0)",
-        margin: "0",
-        pointerEvents: "none",
-        zIndex: "2000",
-        whiteSpace: "nowrap"
-      });
-      titleEl.style.visibility = "hidden";
-      document.body.appendChild(clone);
 
       const scrollDuration = 1200;
 
       const runFloat = () => new Promise(resolve => {
+        // Re-measure after scroll so we start from the current on-page spot
+        const afterRect = titleEl.getBoundingClientRect();
+        const clone = titleEl.cloneNode(true);
+        Object.assign(clone.style, {
+          position: "fixed",
+          left: `${afterRect.left}px`,
+          top: `${afterRect.top}px`,
+          transform: "translate(0, 0)",
+          margin: "0",
+          pointerEvents: "none",
+          zIndex: "2000",
+          whiteSpace: "nowrap"
+        });
+        titleEl.style.visibility = "hidden";
+        document.body.appendChild(clone);
+
         if (typeof gsap !== "undefined") {
           gsap.to(clone, {
             duration: scrollDuration / 1000,
             ease: "power3.inOut",
-            top: targetTop,
+            top: `${afterRect.top}px`, // lock vertical, only move horizontally
             left: targetLeft,
             xPercent: 0,
             yPercent: 0,
@@ -267,7 +269,7 @@ function initMarqueeTitleFloat({
         } else {
           clone.style.transition = `all ${scrollDuration}ms ease-in-out`;
           requestAnimationFrame(() => {
-            clone.style.top = targetTop;
+            clone.style.top = `${afterRect.top}px`;
             clone.style.left = targetLeft;
             clone.style.transform = "translate(0, 0)";
           });
@@ -275,7 +277,7 @@ function initMarqueeTitleFloat({
         }
       });
 
-      // Scroll first, then float, then fade + navigate
+      // Scroll first (title moves naturally), then float horizontally, then fade + navigate
       smoothScrollTo(targetY, scrollDuration)
         .then(() => runFloat())
         .then(() => {
