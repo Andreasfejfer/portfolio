@@ -96,7 +96,7 @@ async function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14
 document.addEventListener('DOMContentLoaded', () => {
   if (document.body.classList.contains('page-index')) {
     initGsapMarquee({ trackSelector: '.marquee_track', duration: 30 });
-    initMarqueeTransition();
+    initMarqueeTitleFloat();
   }
 });
 import "./core.js";
@@ -105,7 +105,6 @@ import { initPreloader } from "./preloader.js";
 import { initScramble } from "./scramble.js";
 import { initRepet } from "./repet.js";
 import { initBackground } from "./background.js";
-import { initMarqueeTransition } from "./page-index-transition.js";
 
 // Simple page fade-out on internal navigation (no fade-in to avoid header flicker)
 function initPageFade({ durationMs = 2000 } = {}) {
@@ -151,6 +150,92 @@ function initPageFade({ durationMs = 2000 } = {}) {
   }, true);
 }
 
+function initMarqueeTitleFloat({
+  trackSelector = ".marquee_track",
+  titleSelector = ".s-title",
+  itemSelector = ".w-dyn-item",
+  targetTop = "8rem",
+  fadeDurationMs = 2000,
+  scrollWaitMs = 350,
+  extraNavDelayMs = 120
+} = {}) {
+  const tracks = Array.from(document.querySelectorAll(trackSelector));
+  if (!tracks.length) return;
+
+  const wrapper = document.querySelector(".page_wrapper");
+  const RETURN_KEY = "page_index_return";
+
+  function storeReturn(scrollY) {
+    sessionStorage.setItem(RETURN_KEY, JSON.stringify({ y: scrollY }));
+  }
+
+  tracks.forEach(track => {
+    track.dataset.skipPageFade = "1";
+    track.addEventListener("click", (e) => {
+      const link = e.target.closest("a[href]");
+      const img = e.target.closest(".marquee_img");
+      if (!link || !img) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+      e.preventDefault();
+      const item = img.closest(itemSelector) || img.closest("[data-marquee-item]") || img.closest("a");
+      const titleEl = item ? item.querySelector(titleSelector) : null;
+      if (!titleEl) {
+        window.location.href = link.href;
+        return;
+      }
+
+      const targetY = Math.max(0, (item.getBoundingClientRect().top + window.scrollY));
+      storeReturn(targetY);
+      window.scrollTo({ top: targetY, behavior: "smooth" });
+
+      const rect = titleEl.getBoundingClientRect();
+      const clone = titleEl.cloneNode(true);
+      Object.assign(clone.style, {
+        position: "fixed",
+        left: `${rect.left + rect.width / 2}px`,
+        top: `${rect.top + rect.height / 2}px`,
+        transform: "translate(-50%, -50%)",
+        margin: "0",
+        pointerEvents: "none",
+        zIndex: "2000",
+        whiteSpace: "nowrap"
+      });
+      document.body.appendChild(clone);
+
+      const run = () => {
+        if (typeof gsap !== "undefined") {
+          gsap.to(clone, {
+            duration: 0.6,
+            ease: "power3.out",
+            top: targetTop,
+            left: "50%",
+            xPercent: -50,
+            yPercent: 0
+          });
+        } else {
+          clone.style.top = targetTop;
+          clone.style.left = "50%";
+          clone.style.transform = "translate(-50%, 0)";
+        }
+
+        if (wrapper) {
+          wrapper.style.transition = `opacity ${fadeDurationMs}ms ease`;
+          requestAnimationFrame(() => {
+            wrapper.style.opacity = "0";
+          });
+        }
+
+        setTimeout(() => {
+          window.location.href = link.href;
+        }, fadeDurationMs + extraNavDelayMs);
+      };
+
+      setTimeout(run, scrollWaitMs);
+    });
+  });
+}
+
 // Hint browser to prefetch likely next page(s)
 function initPrefetchNext() {
   const PREFETCH_URLS = [
@@ -180,4 +265,22 @@ document.addEventListener("DOMContentLoaded", () => {
   // For other pages, still initialize preloader (no-ops if absent) and scramble
   initPreloader();
   initScramble();
+
+  // Restore index scroll on return
+  if (document.body.classList.contains("page-index")) {
+    try {
+      const data = sessionStorage.getItem("page_index_return");
+      if (data) {
+        const parsed = JSON.parse(data);
+        sessionStorage.removeItem("page_index_return");
+        if (parsed && typeof parsed.y === "number" && isFinite(parsed.y)) {
+          setTimeout(() => {
+            window.scrollTo({ top: parsed.y, behavior: "auto" });
+          }, 50);
+        }
+      }
+    } catch (err) {
+      // ignore
+    }
+  }
 });
