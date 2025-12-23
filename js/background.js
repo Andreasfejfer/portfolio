@@ -1,6 +1,7 @@
 const PAIR_GAP_PX = 20;
 const PAIRS_PER_20VW = 3;
 const MIN_PAIR_SPACING_PX = 80;
+const MAX_PAIRS = 11;
 const LINE_SELECTOR = ".background__line";
 
 export function initBackground() {
@@ -22,6 +23,7 @@ export function initBackground() {
 
     let pairCount = Math.max(1, Math.round(available / pairSpacing));
     if (pairCount % 2 === 0) pairCount += 1; // ensure a center pair
+    pairCount = Math.min(pairCount, MAX_PAIRS);
 
     const totalSpan = (pairCount - 1) * pairSpacing;
     const start = paddingLeft + (available - totalSpan) / 2;
