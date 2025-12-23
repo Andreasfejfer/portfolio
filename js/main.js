@@ -103,6 +103,7 @@ import { initHomePage } from "./page-home.js";
 import { initPreloader } from "./preloader.js";
 import { initScramble } from "./scramble.js";
 import { initRepet } from "./repet.js";
+import { initBackground } from "./background.js";
 
 // Simple page fade-out on internal navigation (no fade-in to avoid header flicker)
 function initPageFade({ durationMs = 2000 } = {}) {
@@ -166,6 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initPageFade();
   initPrefetchNext();
   initRepet();
+  initBackground();
 
   if (document.body.classList.contains("page-home")) {
     initHomePage();

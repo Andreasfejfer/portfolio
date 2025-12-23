@@ -131,3 +131,22 @@ html.preloader-active .scramble-text{visibility:hidden}
 
 /* Keep page wrapper fades smooth */
 .page_wrapper{will-change:opacity}
+
+/* Vertical dashed background pairs */
+.background{
+  position:fixed;
+  top:0;
+  bottom:0;
+  left:15vw;
+  right:15vw;
+  pointer-events:none;
+  z-index:0;
+  overflow:hidden;
+}
+.background__line{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:0;
+  border-left:1px dashed rgba(0, 0, 0, 0.07);
+}
