@@ -79,6 +79,7 @@ export function initScrollBlurHeadings({ selector = ".h-in" } = {}) {
     if (!ok) return;
 
     document.querySelectorAll(selector).forEach(el => {
+      if (el.classList.contains("name")) return; // skip names to avoid scroll effect
       if (el.dataset.hInInit === "1") return;
       const chars = splitIntoChars(el);
       if (!chars.length) return;
@@ -112,7 +113,7 @@ export function initScrollBlurHeadings({ selector = ".h-in" } = {}) {
 export function initRevealNames({ selector = ".name", durationSeconds = 2 } = {}) {
   if (typeof gsap === "undefined") return;
 
-  const START_FILTER = "blur(12px) brightness(0%)"; // closer to effect #1
+  const START_FILTER = "blur(10px) brightness(0%)"; // Codrops effect #1 (non-scroll)
 
   const runAnimations = () => {
     document.querySelectorAll(selector).forEach(el => {
@@ -132,6 +133,7 @@ export function initRevealNames({ selector = ".name", durationSeconds = 2 } = {}
         { filter: START_FILTER, willChange: "filter" },
         {
           duration: durationSeconds,
+          delay: 0.1,
           ease: "power2.out",
           filter: "blur(0px) brightness(100%)",
           stagger: 0.05
@@ -147,7 +149,7 @@ export function initRevealNames({ selector = ".name", durationSeconds = 2 } = {}
         requestAnimationFrame(tick);
         return;
       }
-      runAnimations();
+      setTimeout(runAnimations, 50); // ensure overlay removed
     };
     requestAnimationFrame(tick);
   };
