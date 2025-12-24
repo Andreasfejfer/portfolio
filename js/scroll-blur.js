@@ -119,8 +119,10 @@ export function initRevealNames({ selector = ".name", durationSeconds = 2 } = {}
 
     el.dataset.nameInit = "1";
 
+    const START_FILTER = "blur(12.5px) brightness(30%)"; // 25% stronger blur
+
     gsap.set(chars, {
-      filter: "blur(10px) brightness(30%)",
+      filter: START_FILTER,
       willChange: "filter"
     });
 
@@ -128,9 +130,10 @@ export function initRevealNames({ selector = ".name", durationSeconds = 2 } = {}
 
     gsap.fromTo(
       chars,
-      { filter: "blur(10px) brightness(30%)", willChange: "filter" },
+      { filter: START_FILTER, willChange: "filter" },
       {
         duration: durationSeconds,
+        delay: 0.5,
         ease: "power2.out",
         filter: "blur(0px) brightness(100%)",
         stagger: Math.max(0, staggerEach)
