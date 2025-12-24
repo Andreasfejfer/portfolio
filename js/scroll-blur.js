@@ -49,36 +49,62 @@ function registerScrollTrigger() {
   return true;
 }
 
+function loadScrollTriggerFromCdn() {
+  return new Promise(resolve => {
+    const existing = document.querySelector('script[data-h-in-scrolltrigger]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve(registerScrollTrigger()));
+      existing.addEventListener("error", () => resolve(false));
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js";
+    script.async = true;
+    script.dataset.hInScrolltrigger = "1";
+    script.onload = () => resolve(registerScrollTrigger());
+    script.onerror = () => resolve(false);
+    document.head.appendChild(script);
+  });
+}
+
 export function initScrollBlurHeadings({ selector = ".h-in" } = {}) {
   if (typeof gsap === "undefined") return;
-  if (!registerScrollTrigger()) return;
 
-  document.querySelectorAll(selector).forEach(el => {
-    if (el.dataset.hInInit === "1") return;
-    const chars = splitIntoChars(el);
-    if (!chars.length) return;
+  const start = registerScrollTrigger()
+    ? Promise.resolve(true)
+    : loadScrollTriggerFromCdn();
 
-    el.dataset.hInInit = "1";
+  start.then(ok => {
+    if (!ok) return;
 
-    gsap.set(chars, {
-      filter: "blur(10px) brightness(30%)",
-      willChange: "filter"
-    });
+    document.querySelectorAll(selector).forEach(el => {
+      if (el.dataset.hInInit === "1") return;
+      const chars = splitIntoChars(el);
+      if (!chars.length) return;
 
-    gsap.fromTo(
-      chars,
-      { filter: "blur(10px) brightness(30%)", willChange: "filter" },
-      {
-        ease: "none",
-        filter: "blur(0px) brightness(100%)",
-        stagger: 0.05,
-        scrollTrigger: {
-          trigger: el,
-          start: "top bottom-=15%",
-          end: "bottom center+=15%",
-          scrub: true
+      el.dataset.hInInit = "1";
+
+      gsap.set(chars, {
+        filter: "blur(10px) brightness(30%)",
+        willChange: "filter"
+      });
+
+      gsap.fromTo(
+        chars,
+        { filter: "blur(10px) brightness(30%)", willChange: "filter" },
+        {
+          ease: "none",
+          filter: "blur(0px) brightness(100%)",
+          stagger: 0.05,
+          scrollTrigger: {
+            trigger: el,
+            start: "top bottom-=15%",
+            end: "bottom center+=15%",
+            scrub: true
+          }
         }
-      }
-    );
+      );
+    });
   });
 }
