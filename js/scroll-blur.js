@@ -156,6 +156,7 @@ export function initRevealNames({ selector = ".name, .sc1", durationSeconds = 2,
 
     document.querySelectorAll(selector).forEach(el => {
       if (el.dataset.nameInit === "1") return;
+      if (el.classList.contains("m_title")) return;
       const chars = splitNameIntoWordsAndChars(el);
       if (!chars.length) return;
 
