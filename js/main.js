@@ -461,7 +461,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initRepet();
   initBackground();
   initScrollBlurHeadings();
-  initRevealNames({ durationSeconds: 2 });
+  initRevealNames();
 
   if (document.body.classList.contains("page-home")) {
     initHomePage();

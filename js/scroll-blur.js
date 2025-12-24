@@ -142,12 +142,16 @@ export function initScrollBlurHeadings({ selector = ".h-in" } = {}) {
   });
 }
 
-export function initRevealNames({ selector = ".name", durationSeconds = 2 } = {}) {
+export function initRevealNames({ selector = ".name", stagger = 0.05 } = {}) {
   if (typeof gsap === "undefined") return;
 
-  const START_FILTER = "blur(10px) brightness(0%)"; // Codrops effect #1 (non-scroll)
+  const start = registerScrollTrigger()
+    ? Promise.resolve(true)
+    : loadScrollTriggerFromCdn();
 
-  const runAnimations = () => {
+  start.then(ok => {
+    if (!ok) return;
+
     document.querySelectorAll(selector).forEach(el => {
       if (el.dataset.nameInit === "1") return;
       const chars = splitNameIntoWordsAndChars(el);
@@ -155,39 +159,21 @@ export function initRevealNames({ selector = ".name", durationSeconds = 2 } = {}
 
       el.dataset.nameInit = "1";
 
-      gsap.set(chars, {
-        filter: START_FILTER,
-        willChange: "filter"
-      });
-
       gsap.fromTo(
         chars,
-        { filter: START_FILTER, willChange: "filter" },
+        { filter: "blur(10px) brightness(0%)", willChange: "filter" },
         {
-          duration: durationSeconds,
-          ease: "power2.out",
+          ease: "none",
           filter: "blur(0px) brightness(100%)",
-          stagger: 0.05
+          stagger,
+          scrollTrigger: {
+            trigger: el,
+            start: "top bottom-=15%",
+            end: "bottom center+=15%",
+            scrub: true
+          }
         }
       );
     });
-  };
-
-  const runWhenPreloaderDone = () => {
-    const tick = () => {
-      const preloaderGone = window.__PRELOADER_DONE === true && !document.documentElement.classList.contains("preloader-active");
-      if (!preloaderGone) {
-        requestAnimationFrame(tick);
-        return;
-      }
-      setTimeout(runAnimations, 50); // ensure overlay removed
-    };
-    requestAnimationFrame(tick);
-  };
-
-  if (window.__PRELOADER_DONE === true) {
-    runWhenPreloaderDone();
-  } else {
-    window.addEventListener("preloader:done", runWhenPreloaderDone, { once: true });
-  }
+  });
 }
