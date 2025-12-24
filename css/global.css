@@ -112,6 +112,9 @@ body.page-index .page_wrapper{opacity:0}
 /* Optional: pause between loop runs (overrides default LOOP_DELAY) */
 .scramble-loop-pause-2000{--scramble-loop-pause:2000}
 
+/* Scroll blur-in headlines */
+.h-in__char{display:inline-block}
+
 /* =========================
    PRELOADER HELPERS
    ========================= */
