@@ -114,6 +114,7 @@ body.page-index .page_wrapper{opacity:0}
 
 /* Scroll blur-in headlines */
 .h-in__char{display:inline-block}
+.name__char{display:inline-block}
 
 /* =========================
    PRELOADER HELPERS

@@ -1,8 +1,8 @@
 // Blur-in scroll effect inspired by Codrops ScrollBlurTypography (effect #2)
 // Applies to elements matched by the provided selector (default: .h-in).
-function splitIntoChars(el) {
-  if (el.dataset.hInSplit === "1") {
-    return Array.from(el.querySelectorAll(".h-in__char"));
+function splitIntoChars(el, { charClass = "h-in__char", flag = "hInSplit" } = {}) {
+  if (el.dataset[flag] === "1") {
+    return Array.from(el.querySelectorAll(`.${charClass}`));
   }
 
   const chars = [];
@@ -17,7 +17,7 @@ function splitIntoChars(el) {
           continue;
         }
         const span = document.createElement("span");
-        span.className = "h-in__char";
+        span.className = charClass;
         span.textContent = ch;
         parent.appendChild(span);
         chars.push(span);
@@ -32,7 +32,7 @@ function splitIntoChars(el) {
   }
 
   originalNodes.forEach(n => process(n, el));
-  el.dataset.hInSplit = "1";
+  el.dataset[flag] = "1";
   return chars;
 }
 
@@ -106,5 +106,35 @@ export function initScrollBlurHeadings({ selector = ".h-in" } = {}) {
         }
       );
     });
+  });
+}
+
+export function initRevealNames({ selector = ".name", durationSeconds = 2 } = {}) {
+  if (typeof gsap === "undefined") return;
+
+  document.querySelectorAll(selector).forEach(el => {
+    if (el.dataset.nameInit === "1") return;
+    const chars = splitIntoChars(el, { charClass: "name__char", flag: "nameSplit" });
+    if (!chars.length) return;
+
+    el.dataset.nameInit = "1";
+
+    gsap.set(chars, {
+      filter: "blur(10px) brightness(30%)",
+      willChange: "filter"
+    });
+
+    const staggerEach = chars.length > 0 ? durationSeconds / Math.max(chars.length, 1) : 0;
+
+    gsap.fromTo(
+      chars,
+      { filter: "blur(10px) brightness(30%)", willChange: "filter" },
+      {
+        duration: durationSeconds,
+        ease: "power2.out",
+        filter: "blur(0px) brightness(100%)",
+        stagger: Math.max(0, staggerEach)
+      }
+    );
   });
 }
