@@ -81,6 +81,30 @@ function registerScrollTrigger() {
   return true;
 }
 
+function loadGsapFromCdn() {
+  return new Promise(resolve => {
+    if (typeof gsap !== "undefined") {
+      resolve(true);
+      return;
+    }
+
+    const existing = document.querySelector('script[data-gsap-core]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve(typeof gsap !== "undefined"));
+      existing.addEventListener("error", () => resolve(false));
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js";
+    script.async = true;
+    script.dataset.gsapCore = "1";
+    script.onload = () => resolve(typeof gsap !== "undefined");
+    script.onerror = () => resolve(false);
+    document.head.appendChild(script);
+  });
+}
+
 function loadScrollTriggerFromCdn() {
   return new Promise(resolve => {
     const existing = document.querySelector('script[data-h-in-scrolltrigger]');
@@ -101,11 +125,10 @@ function loadScrollTriggerFromCdn() {
 }
 
 export function initScrollBlurHeadings({ selector = ".h-in" } = {}) {
-  if (typeof gsap === "undefined") return;
-
-  const start = registerScrollTrigger()
-    ? Promise.resolve(true)
-    : loadScrollTriggerFromCdn();
+  const start = loadGsapFromCdn().then(ok => {
+    if (!ok) return false;
+    return registerScrollTrigger() ? true : loadScrollTriggerFromCdn();
+  });
 
   start.then(ok => {
     if (!ok) return;
@@ -143,61 +166,68 @@ export function initScrollBlurHeadings({ selector = ".h-in" } = {}) {
 }
 
 export function initRevealNames({ selector = ".name", durationSeconds = 2, stagger = 0.05 } = {}) {
-  if (typeof gsap === "undefined") return;
-
   const START_FILTER = "blur(10px) brightness(0%)"; // Codrops effect #1 styling
 
-  const runAnimations = () => {
-    document.querySelectorAll(selector).forEach(el => {
-      if (el.dataset.nameInit === "1") return;
-      const chars = splitNameIntoWordsAndChars(el);
-      if (!chars.length) return;
+  loadGsapFromCdn().then(ok => {
+    if (!ok) return;
 
-      el.dataset.nameInit = "1";
+    const runAnimations = () => {
+      document.querySelectorAll(selector).forEach(el => {
+        if (el.dataset.nameInit === "1") return;
+        const chars = splitNameIntoWordsAndChars(el);
+        if (!chars.length) return;
 
-      gsap.set(chars, {
-        filter: START_FILTER,
-        willChange: "filter"
+        el.dataset.nameInit = "1";
+
+        gsap.set(chars, {
+          filter: START_FILTER,
+          willChange: "filter"
+        });
+
+        gsap.fromTo(
+          chars,
+          { filter: START_FILTER, willChange: "filter" },
+          {
+            duration: durationSeconds,
+            ease: "power2.out",
+            filter: "blur(0px) brightness(100%)",
+            stagger
+          }
+        );
       });
-
-      gsap.fromTo(
-        chars,
-        { filter: START_FILTER, willChange: "filter" },
-        {
-          duration: durationSeconds,
-          ease: "power2.out",
-          filter: "blur(0px) brightness(100%)",
-          stagger
-        }
-      );
-    });
-  };
-
-  const runWhenPreloaderDone = () => {
-    const tick = () => {
-      const preloaderGone = window.__PRELOADER_DONE === true && !document.documentElement.classList.contains("preloader-active");
-      if (!preloaderGone) {
-        requestAnimationFrame(tick);
-        return;
-      }
-      setTimeout(runAnimations, 50); // ensure overlay removed
     };
-    requestAnimationFrame(tick);
-  };
 
-  if (window.__PRELOADER_DONE === true) {
-    runWhenPreloaderDone();
-  } else {
-    window.addEventListener("preloader:done", runWhenPreloaderDone, { once: true });
-  }
+    const runWhenPreloaderDone = () => {
+      const preloaderFlagDefined = "__PRELOADER_DONE" in window;
+      const tick = () => {
+        const preloaderGone =
+          window.__PRELOADER_DONE === true ||
+          (!preloaderFlagDefined && !document.documentElement.classList.contains("preloader-active"));
+
+        if (!preloaderGone) {
+          requestAnimationFrame(tick);
+          return;
+        }
+        setTimeout(runAnimations, 50); // ensure overlay removed
+      };
+      requestAnimationFrame(tick);
+    };
+
+    if (window.__PRELOADER_DONE === true || !("__PRELOADER_DONE" in window)) {
+      runWhenPreloaderDone();
+    } else {
+      window.addEventListener("preloader:done", runWhenPreloaderDone, { once: true });
+      // Fail-safe in case the event never fires
+      setTimeout(runWhenPreloaderDone, 4000);
+    }
+  });
 }
 
 export function initScrollBlurEffectOne({ selector = ".SE-1", stagger = 0.05 } = {}) {
-  if (typeof gsap === "undefined") return;
-
-  const start = registerScrollTrigger()
-    ? Promise.resolve(true)
-    : loadScrollTriggerFromCdn();
+  const start = loadGsapFromCdn().then(ok => {
+    if (!ok) return false;
+    return registerScrollTrigger() ? true : loadScrollTriggerFromCdn();
+  });
 
   start.then(ok => {
     if (!ok) return;
