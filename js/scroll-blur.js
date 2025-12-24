@@ -142,7 +142,7 @@ export function initScrollBlurHeadings({ selector = ".h-in" } = {}) {
   });
 }
 
-export function initRevealNames({ selector = ".name", durationSeconds = 2, stagger = 0.05 } = {}) {
+export function initRevealNames({ selector = ".name, .sc1", durationSeconds = 2, stagger = 0.05 } = {}) {
   if (typeof gsap === "undefined") return;
 
   const START_FILTER = "blur(10px) brightness(0%)"; // Codrops effect #1 styling
