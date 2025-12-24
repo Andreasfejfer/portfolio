@@ -153,7 +153,7 @@ import { initPreloader } from "./preloader.js";
 import { initScramble } from "./scramble.js";
 import { initRepet } from "./repet.js";
 import { initBackground } from "./background.js";
-import { initScrollBlurHeadings, initRevealNames, initScrollBlurEffectOne } from "./scroll-blur.js";
+import { initScrollBlurHeadings, initRevealNames } from "./scroll-blur.js";
 
 // Simple page fade-out on internal navigation (no fade-in to avoid header flicker)
 function initPageFade({ durationMs = 2000 } = {}) {
@@ -462,7 +462,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initBackground();
   initScrollBlurHeadings();
   initRevealNames();
-  initScrollBlurEffectOne();
 
   if (document.body.classList.contains("page-home")) {
     initHomePage();
