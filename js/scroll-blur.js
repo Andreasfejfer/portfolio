@@ -36,6 +36,38 @@ function splitIntoChars(el, { charClass = "h-in__char", flag = "hInSplit" } = {}
   return chars;
 }
 
+function splitNameIntoWordsAndChars(el) {
+  if (el.dataset.nameSplit === "1") {
+    return Array.from(el.querySelectorAll(".name__char"));
+  }
+
+  const text = el.textContent || "";
+  el.innerHTML = "";
+  const chars = [];
+
+  const tokens = text.split(/(\s+)/);
+  tokens.forEach(token => {
+    if (/^\s+$/.test(token)) {
+      el.appendChild(document.createTextNode(token));
+      return;
+    }
+    if (!token) return;
+    const word = document.createElement("span");
+    word.className = "name__word";
+    token.split("").forEach(ch => {
+      const c = document.createElement("span");
+      c.className = "name__char";
+      c.textContent = ch;
+      word.appendChild(c);
+      chars.push(c);
+    });
+    el.appendChild(word);
+  });
+
+  el.dataset.nameSplit = "1";
+  return chars;
+}
+
 function registerScrollTrigger() {
   if (typeof gsap === "undefined") return false;
 
@@ -118,7 +150,7 @@ export function initRevealNames({ selector = ".name", durationSeconds = 2 } = {}
   const runAnimations = () => {
     document.querySelectorAll(selector).forEach(el => {
       if (el.dataset.nameInit === "1") return;
-      const chars = splitIntoChars(el, { charClass: "name__char", flag: "nameSplit" });
+      const chars = splitNameIntoWordsAndChars(el);
       if (!chars.length) return;
 
       el.dataset.nameInit = "1";
@@ -133,7 +165,6 @@ export function initRevealNames({ selector = ".name", durationSeconds = 2 } = {}
         { filter: START_FILTER, willChange: "filter" },
         {
           duration: durationSeconds,
-          delay: 0.1,
           ease: "power2.out",
           filter: "blur(0px) brightness(100%)",
           stagger: 0.05
