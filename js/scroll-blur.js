@@ -162,20 +162,29 @@ export function initRevealNames({ selector = ".name, .sc1", durationSeconds = 2,
 
       el.dataset.nameInit = "1";
 
+      const isLightBg = el.classList.contains("name-light") || el.dataset.nameTheme === "light";
+      const fromState = { filter: START_FILTER, willChange: "filter" };
+      const toState = {
+        ease: "none",
+        filter: "blur(0px) brightness(100%)",
+        stagger,
+        scrollTrigger: {
+          trigger: el,
+          start: "top bottom-=15%",
+          end: "bottom center+=15%",
+          scrub: true
+        }
+      };
+
+      if (isLightBg) {
+        fromState.opacity = 0;
+        toState.opacity = 1;
+      }
+
       gsap.fromTo(
         chars,
-        { filter: "blur(10px) brightness(0%)", willChange: "filter" },
-        {
-          ease: "none",
-          filter: "blur(0px) brightness(100%)",
-          stagger,
-          scrollTrigger: {
-            trigger: el,
-            start: "top bottom-=15%",
-            end: "bottom center+=15%",
-            scrub: true
-          }
-        }
+        fromState,
+        toState
       );
     });
   });
