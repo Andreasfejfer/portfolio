@@ -405,6 +405,7 @@ function initCmsReturnTitleFloat({
         whiteSpace: "nowrap",
         opacity: "1"
       });
+      titleEl.style.visibility = "hidden";
       document.body.appendChild(clone);
 
       const floatPromise = new Promise(resolve => {
