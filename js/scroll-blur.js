@@ -112,32 +112,37 @@ export function initScrollBlurHeadings({ selector = ".h-in" } = {}) {
 export function initRevealNames({ selector = ".name", durationSeconds = 2 } = {}) {
   if (typeof gsap === "undefined") return;
 
-  document.querySelectorAll(selector).forEach(el => {
-    if (el.dataset.nameInit === "1") return;
-    const chars = splitIntoChars(el, { charClass: "name__char", flag: "nameSplit" });
-    if (!chars.length) return;
+  const START_FILTER = "blur(10px) brightness(0%)"; // effect #1 look
 
-    el.dataset.nameInit = "1";
+  const run = () => {
+    document.querySelectorAll(selector).forEach(el => {
+      if (el.dataset.nameInit === "1") return;
+      const chars = splitIntoChars(el, { charClass: "name__char", flag: "nameSplit" });
+      if (!chars.length) return;
 
-    const START_FILTER = "blur(12.5px) brightness(30%)"; // 25% stronger blur
+      el.dataset.nameInit = "1";
 
-    gsap.set(chars, {
-      filter: START_FILTER,
-      willChange: "filter"
+      gsap.set(chars, {
+        filter: START_FILTER,
+        willChange: "filter"
+      });
+
+      gsap.fromTo(
+        chars,
+        { filter: START_FILTER, willChange: "filter" },
+        {
+          duration: durationSeconds,
+          ease: "power2.out",
+          filter: "blur(0px) brightness(100%)",
+          stagger: 0.05
+        }
+      );
     });
+  };
 
-    const staggerEach = chars.length > 0 ? durationSeconds / Math.max(chars.length, 1) : 0;
-
-    gsap.fromTo(
-      chars,
-      { filter: START_FILTER, willChange: "filter" },
-      {
-        duration: durationSeconds,
-        delay: 0.5,
-        ease: "power2.out",
-        filter: "blur(0px) brightness(100%)",
-        stagger: Math.max(0, staggerEach)
-      }
-    );
-  });
+  if (window.__PRELOADER_DONE) {
+    run();
+  } else {
+    window.addEventListener("preloader:done", run, { once: true });
+  }
 }
