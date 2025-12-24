@@ -112,9 +112,9 @@ export function initScrollBlurHeadings({ selector = ".h-in" } = {}) {
 export function initRevealNames({ selector = ".name", durationSeconds = 2 } = {}) {
   if (typeof gsap === "undefined") return;
 
-  const START_FILTER = "blur(10px) brightness(0%)"; // effect #1 look
+  const START_FILTER = "blur(12px) brightness(0%)"; // closer to effect #1
 
-  const run = () => {
+  const runAnimations = () => {
     document.querySelectorAll(selector).forEach(el => {
       if (el.dataset.nameInit === "1") return;
       const chars = splitIntoChars(el, { charClass: "name__char", flag: "nameSplit" });
@@ -140,9 +140,21 @@ export function initRevealNames({ selector = ".name", durationSeconds = 2 } = {}
     });
   };
 
-  if (window.__PRELOADER_DONE) {
-    run();
+  const runWhenPreloaderDone = () => {
+    const tick = () => {
+      const preloaderGone = window.__PRELOADER_DONE === true && !document.documentElement.classList.contains("preloader-active");
+      if (!preloaderGone) {
+        requestAnimationFrame(tick);
+        return;
+      }
+      runAnimations();
+    };
+    requestAnimationFrame(tick);
+  };
+
+  if (window.__PRELOADER_DONE === true) {
+    runWhenPreloaderDone();
   } else {
-    window.addEventListener("preloader:done", run, { once: true });
+    window.addEventListener("preloader:done", runWhenPreloaderDone, { once: true });
   }
 }
