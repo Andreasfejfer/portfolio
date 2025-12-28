@@ -51,6 +51,7 @@ class RepetEffect {
     this.currentScale = 1;
     this.animationFrame = null;
     this.hoverTimeline = null;
+    this.isInView = false;
 
     this.bgImage = this.resolveImageUrl();
     if (!this.bgImage) return;
@@ -80,6 +81,7 @@ class RepetEffect {
     this.createLayers();
     this.createLayerOutlines();
     this.createHoverTimeline();
+    this.observeVisibility();
     this.bindEvents();
     this.startAnimationLoop();
   }
@@ -226,7 +228,9 @@ class RepetEffect {
 
     this.el.addEventListener("mouseleave", () => {
       this.isHovered = false;
-      this.hoverTimeline && this.hoverTimeline.reverse();
+      if (!this.isInView) {
+        this.hoverTimeline && this.hoverTimeline.reverse();
+      }
       this.resetTransforms();
     });
 
@@ -296,6 +300,40 @@ class RepetEffect {
       this.updateCenter();
       this.createLayerOutlines();
     });
+  }
+
+  observeVisibility() {
+    if (typeof IntersectionObserver === "undefined") return;
+
+    if (!RepetEffect.inViewObserver) {
+      RepetEffect.inViewObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          const instance = entry.target.__repetInstance;
+          if (!instance) return;
+          if (entry.isIntersecting) {
+            instance.handleEnterView();
+          } else {
+            instance.handleExitView();
+          }
+        });
+      }, { threshold: 0.35 });
+    }
+
+    this.el.__repetInstance = this;
+    RepetEffect.inViewObserver.observe(this.el);
+  }
+
+  handleEnterView() {
+    this.isInView = true;
+    this.updateCenter();
+    this.hoverTimeline && this.hoverTimeline.play();
+  }
+
+  handleExitView() {
+    this.isInView = false;
+    if (this.isHovered) return;
+    this.hoverTimeline && this.hoverTimeline.reverse();
+    this.resetTransforms();
   }
 
   startAnimationLoop() {
