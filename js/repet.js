@@ -228,8 +228,10 @@ class RepetEffect {
 
     this.el.addEventListener("mouseleave", () => {
       this.isHovered = false;
-      if (!this.isInView) {
+      if (this.isInView) {
         this.hoverTimeline && this.hoverTimeline.reverse();
+      } else {
+        this.hoverTimeline && this.hoverTimeline.play();
       }
       this.resetTransforms();
     });
@@ -326,14 +328,16 @@ class RepetEffect {
   handleEnterView() {
     this.isInView = true;
     this.updateCenter();
-    this.hoverTimeline && this.hoverTimeline.play();
+    if (!this.isHovered) {
+      this.hoverTimeline && this.hoverTimeline.reverse();
+      this.resetTransforms();
+    }
   }
 
   handleExitView() {
     this.isInView = false;
     if (this.isHovered) return;
-    this.hoverTimeline && this.hoverTimeline.reverse();
-    this.resetTransforms();
+    this.hoverTimeline && this.hoverTimeline.play();
   }
 
   startAnimationLoop() {
