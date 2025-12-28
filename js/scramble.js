@@ -19,6 +19,7 @@ export function initScramble() {
   function initOne(el){
     if (el.dataset.scrambleInit === "1") return;
     el.dataset.scrambleInit = "1";
+    const isScrollScramble = el.classList.contains('scramble-scroll');
 
     // Color mode: add class to parent for styling
     if (el.classList.contains('scramble-black')) {
@@ -28,7 +29,7 @@ export function initScramble() {
     }
 
     // If .scramble-scroll, always start hidden and mark as not revealed
-    if (el.classList.contains('scramble-scroll')) {
+    if (isScrollScramble) {
       el.style.visibility = 'hidden';
       el.dataset.scrambleScrollVisible = '0';
     }
@@ -216,6 +217,18 @@ export function initScramble() {
     const loadDelay = readVarMs(el, "--scramble-load-delay", 0);
     const loopStartDelay = readVarMs(el, "--scramble-loop-start-delay", 0);
     const loopPause = readVarMs(el, "--scramble-loop-pause", LOOP_DELAY);
+    const startHoverLoop = () => {
+      if (el.classList.contains("scramble-loop")){
+        setTimeout(() => {
+          (function loop(){
+            runHoverOnce(() => setTimeout(loop, loopPause));
+          })();
+        }, loopStartDelay);
+      } else {
+        el.addEventListener("pointerenter", () => runHoverOnce());
+        el.addEventListener("touchstart", () => runHoverOnce(), { passive:true });
+      }
+    };
 
     // Short-circuit header/once-marked elements after the preloader on later pages
     if (skipAfterPreloader || skipOnceReveal) {
@@ -224,28 +237,22 @@ export function initScramble() {
         span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
       });
       el.style.visibility = "visible";
-      el.addEventListener("pointerenter", () => runHoverOnce());
-      el.addEventListener("touchstart", () => runHoverOnce(), { passive:true });
+      startHoverLoop();
       return;
     }
 
     // If .scramble-scroll, defer animation to IntersectionObserver
-    if (el.classList.contains('scramble-scroll')) {
-      // Will be handled by observer
+    if (isScrollScramble) {
+      el.__scrambleTrigger = () => {
+        setTimeout(() => {
+          runOnce(() => startHoverLoop());
+        }, loadDelay);
+      };
       return;
     }
     setTimeout(() => {
       runOnce(() => {
-        if (el.classList.contains("scramble-loop")){
-          setTimeout(() => {
-            (function loop(){
-              runHoverOnce(() => setTimeout(loop, loopPause));
-            })();
-          }, loopStartDelay);
-        } else {
-          el.addEventListener("pointerenter", () => runHoverOnce());
-          el.addEventListener("touchstart", () => runHoverOnce(), { passive:true });
-        }
+        startHoverLoop();
       });
     }, loadDelay);
   }
@@ -268,65 +275,70 @@ export function initScramble() {
       el.dataset.scrambleScrollDone = '1';
       el.dataset.scrambleScrollVisible = '1';
       el.style.visibility = 'visible';
-      // Run scramble animation (reuse runOnce logic)
-      const chars = Array.from(el.querySelectorAll('.scramble-char'));
-      const animatable = chars.filter(s => s.dataset.original.trim() !== "");
-      let running = false;
-      let loadTimers = [];
-      function clearTimers(list){ list.forEach(t => clearTimeout(t)); list.length = 0; }
-      function runOnce(onDone){
-        if (running || animatable.length === 0) return;
-        running = true;
-        clearTimers(loadTimers);
-        chars.forEach(s => {
-          s.classList.remove("active-current","active-trail");
-          s.textContent = "\u00A0";
-        });
-        const overlap = 0.6;
-        const baseStagger = Math.max(12, Math.round(SPEED * (1 - overlap)));
-        let completed = 0;
-        animatable.forEach((span, i) => {
-          const flashes = 1;
-          const flashInterval = Math.max(12, Math.round(SPEED / 2));
-          const start = i * baseStagger;
-          for (let f=0; f<flashes; f++){
-            loadTimers.push(setTimeout(() => {
-              span.classList.add("active-current");
-              span.textContent = randSymbol();
-              if (i>0){
-                const trail = animatable[i-1];
-                trail.classList.add("active-trail");
-                trail.textContent = randSymbol();
-              }
-              if (i>1){
-                const older = animatable[i-2];
-                if (older){
-                  older.classList.remove("active-trail");
-                  older.textContent = older.dataset.original === " " ? "\u00A0" : older.dataset.original;
+      const trigger = el.__scrambleTrigger;
+      if (typeof trigger === "function") {
+        trigger();
+      } else {
+        // Fallback: reuse legacy inline animation if trigger is missing
+        const chars = Array.from(el.querySelectorAll('.scramble-char'));
+        const animatable = chars.filter(s => s.dataset.original.trim() !== "");
+        let running = false;
+        let loadTimers = [];
+        function clearTimers(list){ list.forEach(t => clearTimeout(t)); list.length = 0; }
+        function runOnce(onDone){
+          if (running || animatable.length === 0) return;
+          running = true;
+          clearTimers(loadTimers);
+          chars.forEach(s => {
+            s.classList.remove("active-current","active-trail");
+            s.textContent = "\u00A0";
+          });
+          const overlap = 0.6;
+          const baseStagger = Math.max(12, Math.round(SPEED * (1 - overlap)));
+          let completed = 0;
+          animatable.forEach((span, i) => {
+            const flashes = 1;
+            const flashInterval = Math.max(12, Math.round(SPEED / 2));
+            const start = i * baseStagger;
+            for (let f=0; f<flashes; f++){
+              loadTimers.push(setTimeout(() => {
+                span.classList.add("active-current");
+                span.textContent = randSymbol();
+                if (i>0){
+                  const trail = animatable[i-1];
+                  trail.classList.add("active-trail");
+                  trail.textContent = randSymbol();
                 }
+                if (i>1){
+                  const older = animatable[i-2];
+                  if (older){
+                    older.classList.remove("active-trail");
+                    older.textContent = older.dataset.original === " " ? "\u00A0" : older.dataset.original;
+                  }
+                }
+              }, start + f*flashInterval));
+            }
+            const revealTime = start + flashes*flashInterval + Math.round(SPEED * 0.15);
+            loadTimers.push(setTimeout(() => {
+              span.classList.remove("active-current","active-trail");
+              span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
+              if (i>0){
+                const prev = animatable[i-1];
+                prev.classList.remove("active-trail");
+                prev.textContent = prev.dataset.original === " " ? "\u00A0" : prev.dataset.original;
               }
-            }, start + f*flashInterval));
-          }
-          const revealTime = start + flashes*flashInterval + Math.round(SPEED * 0.15);
-          loadTimers.push(setTimeout(() => {
-            span.classList.remove("active-current","active-trail");
-            span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
-            if (i>0){
-              const prev = animatable[i-1];
-              prev.classList.remove("active-trail");
-              prev.textContent = prev.dataset.original === " " ? "\u00A0" : prev.dataset.original;
-            }
-            completed++;
-            if (completed >= animatable.length){
-              running = false;
-              clearTimers(loadTimers);
-              
-              if (typeof onDone === "function") onDone();
-            }
-          }, revealTime));
-        });
+              completed++;
+              if (completed >= animatable.length){
+                running = false;
+                clearTimers(loadTimers);
+                
+                if (typeof onDone === "function") onDone();
+              }
+            }, revealTime));
+          });
+        }
+        runOnce();
       }
-      runOnce();
     }
 
     function checkScrambleScroll() {
