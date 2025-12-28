@@ -199,6 +199,40 @@ function initPageFade({ durationMs = 2000 } = {}) {
   }, true);
 }
 
+function initSmoothScrollAnchors({
+  selector = "a[href*='#']",
+  offset = 0
+} = {}) {
+  const reduceMotionQuery = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
+  if (reduceMotionQuery && reduceMotionQuery.matches) return;
+
+  const links = Array.from(document.querySelectorAll(selector));
+  links.forEach(link => {
+    const href = link.getAttribute("href");
+    if (!href || href === "#" || href.startsWith("mailto:") || href.startsWith("tel:")) return;
+    if (link.target === "_blank") return;
+    if (link.hasAttribute("download")) return;
+    if (link.dataset.skipSmoothScroll === "1") return;
+
+    const url = new URL(href, window.location.href);
+    if (url.pathname !== window.location.pathname) return;
+    if (!url.hash || url.hash.length <= 1) return;
+
+    link.addEventListener("click", (e) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+      const targetId = url.hash.slice(1);
+      const target = document.getElementById(targetId);
+      if (!target) return;
+
+      e.preventDefault();
+      const top = target.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top, behavior: "smooth" });
+      history.replaceState(null, "", url.hash);
+    });
+  });
+}
+
 function initMarqueeTitleFloat({
   trackSelector = ".marquee_track",
   titleSelector = ".s-title",
@@ -457,6 +491,7 @@ function initPrefetchNext() {
 
 document.addEventListener("DOMContentLoaded", () => {
   initPageFade();
+  initSmoothScrollAnchors();
   initPrefetchNext();
   initRepet();
   initBackground();
