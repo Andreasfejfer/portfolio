@@ -178,6 +178,7 @@ export function initScramble() {
     };
 
     const playEffectOne = (onDone) => {
+      rebuildFrom(Array.from(el.childNodes).map(n => snapshotNode(n)));
       if (running || animatable.length === 0) { onDone && onDone(); return; }
       running = true;
       killTweens();
@@ -230,6 +231,7 @@ export function initScramble() {
     };
 
     const playLegacyEntry = (onDone) => {
+      rebuildFrom(Array.from(el.childNodes).map(n => snapshotNode(n)));
       clearLegacyTimers();
       if (running || animatable.length === 0) { onDone && onDone(); return; }
       running = true;
@@ -287,6 +289,7 @@ export function initScramble() {
     };
 
     const playEffectTwo = (onDone) => {
+      rebuildFrom(Array.from(el.childNodes).map(n => snapshotNode(n)));
       if (running) {
         killTweens();
         running = false;
@@ -340,6 +343,7 @@ export function initScramble() {
     };
 
     const playLegacyHover = (onDone) => {
+      rebuildFrom(Array.from(el.childNodes).map(n => snapshotNode(n)));
       clearLegacyTimers();
       if (running || animatable.length === 0) { onDone && onDone(); return; }
       running = true;
