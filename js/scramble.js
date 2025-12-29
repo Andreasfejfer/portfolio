@@ -247,7 +247,8 @@ export function initScramble() {
     const playLegacyEntry = (onDone) => {
       rebuildFrom(Array.from(el.childNodes).map(n => snapshotNode(n)));
       clearLegacyTimers();
-      if (running || animatable.length === 0) { onDone && onDone(); return; }
+      if (animatable.length === 0) { onDone && onDone(); return; }
+      if (running) running = false;
       running = true;
       setOriginalText();
       showScramble(el);
@@ -304,9 +305,10 @@ export function initScramble() {
 
     const playEffectTwo = (onDone) => {
       rebuildFrom(Array.from(el.childNodes).map(n => snapshotNode(n)));
-      if (running || animatable.length === 0) { onDone && onDone(); return; }
+      if (animatable.length === 0) { onDone && onDone(); return; }
       clearLegacyTimers();
       killTweens();
+      if (running) running = false;
       running = true;
       setOriginalText();
       showScramble(el);
@@ -356,8 +358,9 @@ export function initScramble() {
     const playLegacyHover = (onDone) => {
       rebuildFrom(Array.from(el.childNodes).map(n => snapshotNode(n)));
       clearLegacyTimers();
-      if (running || animatable.length === 0) { onDone && onDone(); return; }
+      if (animatable.length === 0) { onDone && onDone(); return; }
       killTweens();
+      if (running) running = false;
       running = true;
       setOriginalText();
       showScramble(el);
@@ -415,6 +418,7 @@ export function initScramble() {
     const animateBack = () => {
       clearLegacyTimers();
       if (hasGsap) {
+        gsap.killTweensOf(chars);
         gsap.killTweensOf(el);
         gsap.to(el, {
           duration: EFFECT2.bgBackDuration,
@@ -467,6 +471,8 @@ export function initScramble() {
       const startSingleHover = () => {
         clearHoverLoop();
         clearLegacyTimers();
+        killTweens();
+        running = false;
         const runner = isLoop ? playLegacyHover : playEffectTwo;
         runner(() => {
           if (!hovering || pendingBack) {
@@ -479,6 +485,10 @@ export function initScramble() {
       const onEnter = () => {
         hovering = true;
         pendingBack = false;
+        clearHoverLoop();
+        clearLegacyTimers();
+        killTweens();
+        running = false;
         if (isLoop) {
           startLoopingHover();
         } else {
