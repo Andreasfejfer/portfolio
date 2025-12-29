@@ -288,6 +288,8 @@ export function initScramble() {
     // Safety: unhide any scramble text that somehow stayed hidden, restore original chars
     setTimeout(() => {
       document.querySelectorAll(".scramble-text").forEach(el => {
+        // Don't auto-unhide scroll scrambles until they've been triggered
+        if (el.classList.contains('scramble-scroll') && el.dataset.scrambleScrollVisible !== '1') return;
         const hidden = (el.style.visibility === "hidden") || (el.style.opacity === "0");
         if (hidden) {
           el.querySelectorAll('.scramble-char').forEach(span => {
