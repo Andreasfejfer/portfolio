@@ -44,6 +44,7 @@ export function initScramble() {
     }
 
     const originalNodes = Array.from(el.childNodes);
+    const preserveAll = el.dataset.scramblePreserve === "1" || el.classList.contains("scramble-preserve");
     if (!originalNodes.length) return;
 
     el.innerHTML = "";
@@ -62,6 +63,21 @@ export function initScramble() {
       } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "BR") {
         parent.appendChild(document.createElement("br"));
       } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const shouldPreserve = preserveAll || node.dataset.scramblePreserve === "1" || node.classList.contains("scramble-preserve");
+        if (shouldPreserve) {
+          const clone = node.cloneNode(false);
+          parent.appendChild(clone);
+          const txt = node.textContent || "";
+          Array.from(txt).forEach(ch => {
+            const span = document.createElement("span");
+            span.className = "scramble-char";
+            span.dataset.original = ch;
+            span.textContent = ch === " " ? "\u00A0" : ch;
+            clone.appendChild(span);
+            chars.push(span);
+          });
+          return;
+        }
         const clone = node.cloneNode(false);
         parent.appendChild(clone);
         Array.from(node.childNodes).forEach(child => processNode(child, clone));
