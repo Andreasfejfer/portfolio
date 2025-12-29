@@ -98,7 +98,10 @@
 .scramble-text.scramble-scroll{
   visibility:hidden !important;
 }
-.scramble-visible{
+.scramble-visible,
+.scramble-text.scramble-visible,
+.scramble-scroll.scramble-visible,
+.scramble-text.scramble-scroll.scramble-visible{
   visibility:visible !important;
 }
 .scramble-text{display:inline-block;line-height:1.1;visibility:hidden}
