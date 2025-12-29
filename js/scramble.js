@@ -3,6 +3,7 @@ export function initScramble() {
 
   const LETTERS_AND_SYMBOLS = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','!','@','#','$','%','^','&','*','-','_','+','=',';',':','<','>',','];
   const LEGACY_SYMBOLS = ["#","€","&","%","/","*","$","!"];
+  const LEGACY_SPEED = 240;
   const EFFECT1 = {
     duration: 0.03,
     repeat: 3,
@@ -61,12 +62,13 @@ export function initScramble() {
       el.dataset.scrambleScrollVisible = '0';
     }
 
-    const originalNodes = Array.from(el.childNodes);
+    const originalNodes = Array.from(el.childNodes).map(n => n.cloneNode(true));
     if (!originalNodes.length) return;
 
     el.innerHTML = "";
 
-    const chars = [];
+    let chars = [];
+    let animatable = [];
     function processNode(node, parent) {
       if (node.nodeType === Node.TEXT_NODE) {
         Array.from(node.textContent).forEach(ch => {
@@ -84,10 +86,12 @@ export function initScramble() {
         if (preserve) {
           const clone = node.cloneNode(false);
           parent.appendChild(clone);
+          clone.dataset.scramblePreserve = "1";
           Array.from(node.textContent).forEach(ch => {
             const span = document.createElement("span");
             span.className = "scramble-char";
             span.dataset.original = ch;
+            span.dataset.scramblePreserve = "1";
             span.textContent = ch === " " ? "\u00A0" : ch;
             clone.appendChild(span);
             chars.push(span);
@@ -100,9 +104,36 @@ export function initScramble() {
       }
     }
 
-    originalNodes.forEach(n => processNode(n, el));
+    function snapshotNode(node){
+      if (node.nodeType === Node.TEXT_NODE) {
+        return document.createTextNode(node.textContent);
+      }
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        // Convert existing scramble chars back to plain text nodes
+        if (node.classList && node.classList.contains("scramble-char")) {
+          return document.createTextNode(node.dataset.original || node.textContent || "");
+        }
+        const clone = node.cloneNode(false);
+        Array.from(node.childNodes).forEach(child => {
+          const snapChild = snapshotNode(child);
+          if (snapChild) clone.appendChild(snapChild);
+        });
+        return clone;
+      }
+      return null;
+    }
 
-    const animatable = Array.from(el.querySelectorAll('.scramble-char')).filter(s => s.dataset.original.trim() !== "");
+    function rebuildFrom(nodes){
+      el.innerHTML = "";
+      chars = [];
+      nodes.forEach(n => processNode(n, el));
+      animatable = Array.from(el.querySelectorAll('.scramble-char')).filter(s => {
+        if (s.dataset.scramblePreserve === "1") return true;
+        return s.dataset.original.trim() !== "";
+      });
+    }
+
+    rebuildFrom(originalNodes);
 
     const isHeadScramble = el.classList.contains('head') && el.classList.contains('scramble-text');
     const hasSeenPreloader = sessionStorage.getItem('preloader_shown_session') === "1";
@@ -195,6 +226,63 @@ export function initScramble() {
             }
           }
         });
+      });
+    };
+
+    const playLegacyEntry = (onDone) => {
+      clearLegacyTimers();
+      if (running || animatable.length === 0) { onDone && onDone(); return; }
+      running = true;
+      setOriginalText();
+      showScramble(el);
+      let completed = 0;
+
+      const overlap = 0.6;
+      const baseStagger = Math.max(12, Math.round(LEGACY_SPEED * (1 - overlap)));
+      const flashInterval = Math.max(12, Math.round(LEGACY_SPEED / 2));
+
+      animatable.forEach((span, i) => {
+        const flashes = 1;
+        const start = i * baseStagger;
+
+        for (let f=0; f<flashes; f++){
+          legacyTimers.push(setTimeout(() => {
+            span.classList.add("active-current");
+            span.textContent = pickLegacy();
+
+            if (i>0){
+              const trail = animatable[i-1];
+              trail.classList.add("active-trail");
+              trail.textContent = pickLegacy();
+            }
+            if (i>1){
+              const older = animatable[i-2];
+              if (older){
+                older.classList.remove("active-trail");
+                older.textContent = older.dataset.original === " " ? "\u00A0" : older.dataset.original;
+              }
+            }
+          }, start + f*flashInterval));
+        }
+
+        const revealTime = start + flashes*flashInterval + Math.round(LEGACY_SPEED * 0.15);
+        legacyTimers.push(setTimeout(() => {
+          span.classList.remove("active-current","active-trail");
+          span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
+
+          if (i>0){
+            const prev = animatable[i-1];
+            prev.classList.remove("active-trail");
+            prev.textContent = prev.dataset.original === " " ? "\u00A0" : prev.dataset.original;
+          }
+
+          completed++;
+          if (completed >= animatable.length){
+            running = false;
+            clearLegacyTimers();
+            onDone && onDone();
+          }
+        }, revealTime));
       });
     };
 
@@ -414,14 +502,16 @@ export function initScramble() {
     if (isScrollScramble) {
       el.__scrambleTrigger = () => {
         setTimeout(() => {
-          playEffectOne(() => startHoverHandlers());
+          const entryRunner = isLoop ? playLegacyEntry : playEffectOne;
+          entryRunner(() => startHoverHandlers());
         }, loadDelay);
       };
       return;
     }
 
     setTimeout(() => {
-      playEffectOne(() => {
+      const entryRunner = isLoop ? playLegacyEntry : playEffectOne;
+      entryRunner(() => {
         startHoverHandlers();
       });
     }, loadDelay);
