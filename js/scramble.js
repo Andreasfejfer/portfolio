@@ -84,6 +84,7 @@ export function initScramble() {
     let running = false;
     let loadTimers = [];
     let hoverTimer = null;
+    let pendingBack = false;
 
     const clearHoverTimer = () => {
       if (hoverTimer) {
@@ -208,7 +209,8 @@ export function initScramble() {
         clearHoverTimer();
         const loop = () => {
           runHover(() => {
-            if (!el.matches(':hover')) {
+            if (pendingBack || !el.matches(':hover')) {
+              pendingBack = false;
               animateBack();
               return;
             }
@@ -221,27 +223,32 @@ export function initScramble() {
       const startSingleHover = () => {
         clearHoverTimer();
         runHover(() => {
-          if (!el.matches(':hover')) {
+          if (pendingBack || !el.matches(':hover')) {
+            pendingBack = false;
             animateBack();
           }
         });
       };
 
       el.addEventListener("pointerenter", () => {
+        pendingBack = false;
         if (isLoop) startLoopingHover();
         else startSingleHover();
       });
       el.addEventListener("touchstart", () => {
+        pendingBack = false;
         if (isLoop) startLoopingHover();
         else startSingleHover();
       }, { passive:true });
       el.addEventListener("pointerleave", () => {
         clearHoverTimer();
-        animateBack();
+        pendingBack = true;
+        if (!running) animateBack();
       });
       el.addEventListener("touchend", () => {
         clearHoverTimer();
-        animateBack();
+        pendingBack = true;
+        if (!running) animateBack();
       }, { passive:true });
     };
 
@@ -272,6 +279,15 @@ export function initScramble() {
 
   function initAll(){
     document.querySelectorAll(".scramble-text").forEach(initOne);
+    // Safety: unhide any scramble text that somehow stayed hidden
+    setTimeout(() => {
+      document.querySelectorAll(".scramble-text").forEach(el => {
+        if (el.style.visibility === "hidden") {
+          el.style.visibility = "visible";
+          el.style.opacity = "1";
+        }
+      });
+    }, 3000);
     // Scramble-scroll logic
     const scrollEls = Array.from(document.querySelectorAll('.scramble-scroll'));
     scrollEls.forEach(el => {
