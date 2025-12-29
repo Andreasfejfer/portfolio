@@ -265,7 +265,15 @@ export function initScramble() {
             hoverLoopTimer = setTimeout(loop, loopPause);
           });
         };
-        hoverLoopTimer = setTimeout(loop, loopStartDelay);
+        // Run once immediately, then repeat after configured delay/pause
+        playEffectTwo(() => {
+          if (!hovering || pendingBack) {
+            pendingBack = false;
+            animateBack();
+            return;
+          }
+          hoverLoopTimer = setTimeout(loop, loopStartDelay || loopPause);
+        });
       };
 
       const startSingleHover = () => {
