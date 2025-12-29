@@ -50,40 +50,37 @@ export function initScramble() {
     el.innerHTML = "";
 
     const chars = [];
-    function processNode(node, parent) {
-      if (node.nodeType === Node.TEXT_NODE) {
-        Array.from(node.textContent).forEach(ch => {
-          const span = document.createElement("span");
-          span.className = "scramble-char";
-          span.dataset.original = ch;
-          span.textContent = ch === " " ? "\u00A0" : ch;
-          parent.appendChild(span);
-          chars.push(span);
-        });
-      } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "BR") {
-        parent.appendChild(document.createElement("br"));
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
-        const shouldPreserve = preserveAll || node.dataset.scramblePreserve === "1" || node.classList.contains("scramble-preserve");
-        if (shouldPreserve) {
-          const clone = node.cloneNode(false);
-          parent.appendChild(clone);
-          const txt = node.textContent || "";
-          Array.from(txt).forEach(ch => {
+    if (preserveAll) {
+      const txt = originalNodes.map(n => n.textContent || "").join("");
+      Array.from(txt).forEach(ch => {
+        const span = document.createElement("span");
+        span.className = "scramble-char";
+        span.dataset.original = ch;
+        span.textContent = ch === " " ? "\u00A0" : ch;
+        el.appendChild(span);
+        chars.push(span);
+      });
+    } else {
+      function processNode(node, parent) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          Array.from(node.textContent).forEach(ch => {
             const span = document.createElement("span");
             span.className = "scramble-char";
             span.dataset.original = ch;
             span.textContent = ch === " " ? "\u00A0" : ch;
-            clone.appendChild(span);
+            parent.appendChild(span);
             chars.push(span);
           });
-          return;
+        } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "BR") {
+          parent.appendChild(document.createElement("br"));
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          const clone = node.cloneNode(false);
+          parent.appendChild(clone);
+          Array.from(node.childNodes).forEach(child => processNode(child, clone));
         }
-        const clone = node.cloneNode(false);
-        parent.appendChild(clone);
-        Array.from(node.childNodes).forEach(child => processNode(child, clone));
       }
+      originalNodes.forEach(n => processNode(n, el));
     }
-    originalNodes.forEach(n => processNode(n, el));
 
     const animatable = Array.from(el.querySelectorAll('.scramble-char')).filter(s => s.dataset.original.trim() !== "");
 
