@@ -97,12 +97,14 @@
 .scramble-text,
 .scramble-text.scramble-scroll{
   visibility:hidden !important;
+  opacity:0;
 }
 .scramble-visible,
 .scramble-text.scramble-visible,
 .scramble-scroll.scramble-visible,
 .scramble-text.scramble-scroll.scramble-visible{
   visibility:visible !important;
+  opacity:1;
 }
 .scramble-text{display:inline-block;line-height:1.1;visibility:hidden}
 .scramble-char{display:inline-block;position:relative;padding:0.08em 0;line-height:1;background:transparent;color:inherit;transition:background-color .12s ease,color .12s ease;vertical-align:middle;letter-spacing:inherit;white-space:pre}

@@ -12,10 +12,12 @@ export function initScramble() {
   const hideScramble = (el) => {
     el.classList.remove('scramble-visible');
     el.style.visibility = 'hidden';
+    el.style.opacity = '0';
   };
   const showScramble = (el) => {
     el.classList.add('scramble-visible');
     el.style.visibility = 'visible';
+    el.style.opacity = '1';
   };
 
   const readVarMs = (el, varName, fallback=0) => {
