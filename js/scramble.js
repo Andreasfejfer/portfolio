@@ -268,6 +268,9 @@ export function initScramble() {
         el.style.visibility = 'hidden';
       }
     });
+    const footerEl = document.querySelector('.footer');
+    const footerScrollEls = footerEl ? scrollEls.filter(el => footerEl.contains(el)) : [];
+    let footerTriggered = false;
 
     // Track previous top for each element
     const prevTops = new WeakMap();
@@ -341,7 +344,17 @@ export function initScramble() {
       }
     }
 
+    function triggerFooterGroupIfNeeded() {
+      if (footerTriggered || !footerEl || !footerScrollEls.length) return;
+      const rect = footerEl.getBoundingClientRect();
+      if (rect.top <= window.innerHeight && rect.bottom >= 0) {
+        footerTriggered = true;
+        footerScrollEls.forEach(triggerScramble);
+      }
+    }
+
     function checkScrambleScroll() {
+      triggerFooterGroupIfNeeded();
       scrollEls.forEach(el => {
         if (el.dataset.scrambleScrollDone) return;
         const percent = parseFloat(el.getAttribute('data-scramble-offset')) || 70;

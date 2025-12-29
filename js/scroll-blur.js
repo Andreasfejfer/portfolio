@@ -142,7 +142,12 @@ export function initScrollBlurHeadings({ selector = ".h-in" } = {}) {
   });
 }
 
-export function initRevealNames({ selector = ".name, .sc1", durationSeconds = 2, stagger = 0.05 } = {}) {
+export function initRevealNames({
+  selector = ".name, .sc1",
+  durationSeconds = 2,
+  stagger = 0.05,
+  minDurationSeconds = 2
+} = {}) {
   if (typeof gsap === "undefined") return;
 
   const START_FILTER = "blur(10px) brightness(0%)"; // Codrops effect #1 styling
@@ -172,7 +177,7 @@ export function initRevealNames({ selector = ".name, .sc1", durationSeconds = 2,
           trigger: el,
           start: "top bottom-=15%",
           end: "bottom center+=15%",
-          scrub: true
+          scrub: Math.max(minDurationSeconds, durationSeconds)
         }
       };
 
