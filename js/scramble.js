@@ -100,6 +100,8 @@ export function initScramble() {
 
     let running = false;
     let hoverLoopTimer = null;
+    let pendingBack = false;
+    let hovering = false;
 
     const setOriginalText = () => {
       chars.forEach(span => {
@@ -222,15 +224,16 @@ export function initScramble() {
 
     const animateBack = () => {
       if (hasGsap) {
-        gsap.killTweensOf(chars);
         gsap.killTweensOf(el);
         gsap.to(el, {
           duration: EFFECT2.bgBackDuration,
           ease: EFFECT2.bgBackEase,
-          '--anim': 0
+          '--anim': 0,
+          onComplete: setOriginalText
         });
+      } else {
+        setOriginalText();
       }
-      setOriginalText();
       running = false;
     };
 
@@ -245,34 +248,68 @@ export function initScramble() {
       }
     };
 
-    const startHoverLoop = () => {
-      if (el.classList.contains("scramble-loop")){
+    const startHoverHandlers = () => {
+      const startLoopingHover = () => {
         clearHoverLoop();
         const loop = () => {
           playEffectTwo(() => {
+            if (!hovering || pendingBack) {
+              pendingBack = false;
+              animateBack();
+              return;
+            }
             hoverLoopTimer = setTimeout(loop, loopPause);
           });
         };
-        setTimeout(loop, loopStartDelay);
-      } else {
-        el.addEventListener("pointerenter", () => playEffectTwo());
-        el.addEventListener("touchstart", () => playEffectTwo(), { passive:true });
-        el.addEventListener("pointerleave", animateBack);
-        el.addEventListener("touchend", animateBack, { passive:true });
-      }
+        hoverLoopTimer = setTimeout(loop, loopStartDelay);
+      };
+
+      const startSingleHover = () => {
+        clearHoverLoop();
+        playEffectTwo(() => {
+          if (!hovering || pendingBack) {
+            pendingBack = false;
+            animateBack();
+          }
+        });
+      };
+
+      const onEnter = () => {
+        hovering = true;
+        pendingBack = false;
+        if (el.classList.contains("scramble-loop")) {
+          startLoopingHover();
+        } else {
+          startSingleHover();
+        }
+      };
+
+      const onLeave = () => {
+        hovering = false;
+        pendingBack = true;
+        clearHoverLoop();
+        if (!running) {
+          animateBack();
+        }
+      };
+
+      el.addEventListener("pointerenter", onEnter);
+      el.addEventListener("touchstart", onEnter, { passive:true });
+      el.addEventListener("pointerleave", onLeave);
+      el.addEventListener("touchend", onLeave, { passive:true });
     };
 
     if (skipAfterPreloader || skipOnceReveal) {
       setOriginalText();
       showScramble(el);
-      startHoverLoop();
+      startHoverHandlers();
       return;
     }
 
     if (isScrollScramble) {
       el.__scrambleTrigger = () => {
         setTimeout(() => {
-          playEffectOne(() => startHoverLoop());
+          playEffectOne(() => startHoverHandlers());
         }, loadDelay);
       };
       return;
@@ -280,7 +317,7 @@ export function initScramble() {
 
     setTimeout(() => {
       playEffectOne(() => {
-        startHoverLoop();
+        startHoverHandlers();
       });
     }, loadDelay);
   }
