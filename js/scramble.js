@@ -304,7 +304,7 @@ export function initScramble() {
 
     const playEffectTwo = (onDone) => {
       rebuildFrom(Array.from(el.childNodes).map(n => snapshotNode(n)));
-      if (animatable.length === 0) { onDone && onDone(); return; }
+      if (running || animatable.length === 0) { onDone && onDone(); return; }
       clearLegacyTimers();
       killTweens();
       running = true;
@@ -356,7 +356,7 @@ export function initScramble() {
     const playLegacyHover = (onDone) => {
       rebuildFrom(Array.from(el.childNodes).map(n => snapshotNode(n)));
       clearLegacyTimers();
-      if (animatable.length === 0) { onDone && onDone(); return; }
+      if (running || animatable.length === 0) { onDone && onDone(); return; }
       killTweens();
       running = true;
       setOriginalText();
@@ -479,10 +479,6 @@ export function initScramble() {
       const onEnter = () => {
         hovering = true;
         pendingBack = false;
-        running = false;
-        clearHoverLoop();
-        clearLegacyTimers();
-        killTweens();
         if (isLoop) {
           startLoopingHover();
         } else {
