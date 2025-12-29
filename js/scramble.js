@@ -99,6 +99,14 @@ export function initScramble() {
       }
     };
 
+    const setHiddenText = () => {
+      chars.forEach(span => {
+        span.classList.remove("active-current","active-trail");
+        span.textContent = "\u00A0";
+        span.style.setProperty('--opa', '0');
+      });
+    };
+
     const setOriginalText = () => {
       chars.forEach(span => {
         span.classList.remove("active-current","active-trail");
@@ -123,8 +131,8 @@ export function initScramble() {
       running = true;
       clearTimers(loadTimers);
       killTweens();
+      setHiddenText();
       showScramble(el);
-      setOriginalText();
       let completed = 0;
       animatable.forEach((span, idx) => {
         const original = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
@@ -321,7 +329,6 @@ export function initScramble() {
     function triggerScramble(el) {
       el.dataset.scrambleScrollDone = '1';
       el.dataset.scrambleScrollVisible = '1';
-      showScramble(el);
       const trigger = el.__scrambleTrigger;
       if (typeof trigger === "function") {
         trigger();
