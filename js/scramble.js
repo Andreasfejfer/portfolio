@@ -349,7 +349,8 @@ export function initScramble() {
     function triggerFooterGroupIfNeeded() {
       if (footerTriggered || !footerContainer || !footerScrollEls.length) return;
       const rect = footerContainer.getBoundingClientRect();
-      if (rect.top <= window.innerHeight && rect.bottom >= 0) {
+      const offsetTrigger = window.innerHeight * 0.9; // 10% offset from bottom
+      if (rect.top <= offsetTrigger && rect.bottom >= 0) {
         footerTriggered = true;
         footerScrollEls.forEach(triggerScramble);
       }

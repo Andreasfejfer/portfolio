@@ -144,9 +144,9 @@ export function initScrollBlurHeadings({ selector = ".h-in" } = {}) {
 
 export function initRevealNames({
   selector = ".name, .sc1",
-  durationSeconds = 2,
+  durationSeconds = 3,
   stagger = 0.05,
-  minDurationSeconds = 2
+  minDurationSeconds = 3
 } = {}) {
   if (typeof gsap === "undefined") return;
 
