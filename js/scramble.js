@@ -269,7 +269,9 @@ export function initScramble() {
       }
     });
     const footerEl = document.querySelector('.footer');
-    const footerScrollEls = footerEl ? scrollEls.filter(el => footerEl.contains(el)) : [];
+    const footerInfoEl = footerEl ? footerEl.querySelector('.footer-info') : null;
+    const footerContainer = footerInfoEl || footerEl;
+    const footerScrollEls = footerContainer ? scrollEls.filter(el => footerContainer.contains(el)) : [];
     let footerTriggered = false;
 
     // Track previous top for each element
@@ -345,8 +347,8 @@ export function initScramble() {
     }
 
     function triggerFooterGroupIfNeeded() {
-      if (footerTriggered || !footerEl || !footerScrollEls.length) return;
-      const rect = footerEl.getBoundingClientRect();
+      if (footerTriggered || !footerContainer || !footerScrollEls.length) return;
+      const rect = footerContainer.getBoundingClientRect();
       if (rect.top <= window.innerHeight && rect.bottom >= 0) {
         footerTriggered = true;
         footerScrollEls.forEach(triggerScramble);
