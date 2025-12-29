@@ -255,25 +255,27 @@ export function initScramble() {
     const startHoverHandlers = () => {
       const startLoopingHover = () => {
         clearHoverLoop();
-        const loop = () => {
+        const runLoop = () => {
+          if (!hovering || pendingBack) {
+            pendingBack = false;
+            animateBack();
+            return;
+          }
           playEffectTwo(() => {
             if (!hovering || pendingBack) {
               pendingBack = false;
               animateBack();
               return;
             }
-            hoverLoopTimer = setTimeout(loop, loopPause);
+            hoverLoopTimer = setTimeout(runLoop, loopPause);
           });
         };
-        // Run once immediately, then repeat after configured delay/pause
-        playEffectTwo(() => {
-          if (!hovering || pendingBack) {
-            pendingBack = false;
-            animateBack();
-            return;
-          }
-          hoverLoopTimer = setTimeout(loop, loopStartDelay || loopPause);
-        });
+        // respect optional start delay
+        if (loopStartDelay > 0) {
+          hoverLoopTimer = setTimeout(runLoop, loopStartDelay);
+        } else {
+          runLoop();
+        }
       };
 
       const startSingleHover = () => {
