@@ -2,6 +2,7 @@
 export function initScramble() {
 
   const LETTERS_AND_SYMBOLS = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','!','@','#','$','%','^','&','*','-','_','+','=',';',':','<','>',','];
+  const LEGACY_SYMBOLS = ["#","€","&","%","/","*","$","!"];
   const EFFECT1 = {
     duration: 0.03,
     repeat: 3,
@@ -19,11 +20,13 @@ export function initScramble() {
     bgBackEase: "power4"
   };
   const LOOP_DELAY = 2000;
+  const LEGACY_HOVER_SPEED = 120;
   let preloaderJustFinished = false;
 
   const hasGsap = typeof window !== "undefined" && typeof gsap !== "undefined";
 
   const pickRandom = () => LETTERS_AND_SYMBOLS[Math.floor(Math.random() * LETTERS_AND_SYMBOLS.length)];
+  const pickLegacy = () => LEGACY_SYMBOLS[Math.floor(Math.random() * LEGACY_SYMBOLS.length)];
   const hideScramble = (el) => {
     el.classList.remove('scramble-visible');
     el.style.visibility = 'hidden';
@@ -45,6 +48,7 @@ export function initScramble() {
     if (el.dataset.scrambleInit === "1") return;
     el.dataset.scrambleInit = "1";
     const isScrollScramble = el.classList.contains('scramble-scroll');
+    const isLoop = el.classList.contains("scramble-loop");
 
     if (el.classList.contains('scramble-black')) {
       el.classList.add('scramble-color-black');
@@ -102,6 +106,7 @@ export function initScramble() {
     let hoverLoopTimer = null;
     let pendingBack = false;
     let hovering = false;
+    let legacyTimers = [];
 
     const setOriginalText = () => {
       chars.forEach(span => {
@@ -119,6 +124,11 @@ export function initScramble() {
       if (!hasGsap) return;
       gsap.killTweensOf(chars);
       gsap.killTweensOf(el);
+    };
+
+    const clearLegacyTimers = () => {
+      legacyTimers.forEach(t => clearTimeout(t));
+      legacyTimers = [];
     };
 
     const playEffectOne = (onDone) => {
@@ -226,7 +236,66 @@ export function initScramble() {
       }
     };
 
+    const playLegacyHover = (onDone) => {
+      clearLegacyTimers();
+      if (running || animatable.length === 0) { onDone && onDone(); return; }
+      running = true;
+      killTweens();
+      setOriginalText();
+      showScramble(el);
+      let completed = 0;
+
+      const overlap = 0.5;
+      const baseStagger = Math.max(20, Math.round(LEGACY_HOVER_SPEED * (1 - overlap)));
+      const flashInterval = Math.max(20, Math.round(LEGACY_HOVER_SPEED / 2));
+
+      animatable.forEach((span, i) => {
+        const flashes = 1 + Math.floor(Math.random() * 2);
+        const start = i * baseStagger;
+
+        for (let f=0; f<flashes; f++){
+          legacyTimers.push(setTimeout(() => {
+            span.classList.add("active-current");
+            span.textContent = pickLegacy();
+
+            if (i>0){
+              const trail = animatable[i-1];
+              trail.classList.add("active-trail");
+              trail.textContent = pickLegacy();
+            }
+            if (i>1){
+              const older = animatable[i-2];
+              if (older){
+                older.classList.remove("active-trail");
+                older.textContent = older.dataset.original === " " ? "\u00A0" : older.dataset.original;
+              }
+            }
+          }, start + f*flashInterval));
+        }
+
+        const revealTime = start + flashes*flashInterval + Math.round(LEGACY_HOVER_SPEED * 0.1);
+        legacyTimers.push(setTimeout(() => {
+          span.classList.remove("active-current","active-trail");
+          span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
+
+          if (i>0){
+            const prev = animatable[i-1];
+            prev.classList.remove("active-trail");
+            prev.textContent = prev.dataset.original === " " ? "\u00A0" : prev.dataset.original;
+          }
+
+          completed++;
+          if (completed >= animatable.length){
+            running = false;
+            clearLegacyTimers();
+            onDone && onDone();
+          }
+        }, revealTime));
+      });
+    };
+
     const animateBack = () => {
+      clearLegacyTimers();
       if (hasGsap) {
         gsap.killTweensOf(el);
         gsap.to(el, {
@@ -255,13 +324,15 @@ export function initScramble() {
     const startHoverHandlers = () => {
       const startLoopingHover = () => {
         clearHoverLoop();
+        clearLegacyTimers();
         const runLoop = () => {
           if (!hovering || pendingBack) {
             pendingBack = false;
             animateBack();
             return;
           }
-          playEffectTwo(() => {
+          const runner = isLoop ? playLegacyHover : playEffectTwo;
+          runner(() => {
             if (!hovering || pendingBack) {
               pendingBack = false;
               animateBack();
@@ -280,7 +351,9 @@ export function initScramble() {
 
       const startSingleHover = () => {
         clearHoverLoop();
-        playEffectTwo(() => {
+        clearLegacyTimers();
+        const runner = isLoop ? playLegacyHover : playEffectTwo;
+        runner(() => {
           if (!hovering || pendingBack) {
             pendingBack = false;
             animateBack();
@@ -291,7 +364,7 @@ export function initScramble() {
       const onEnter = () => {
         hovering = true;
         pendingBack = false;
-        if (el.classList.contains("scramble-loop")) {
+        if (isLoop) {
           startLoopingHover();
         } else {
           startSingleHover();
@@ -302,6 +375,7 @@ export function initScramble() {
         hovering = false;
         pendingBack = true;
         clearHoverLoop();
+        clearLegacyTimers();
         if (!running) {
           animateBack();
         }
