@@ -67,6 +67,7 @@ export function initScramble() {
 
     el.innerHTML = "";
 
+    const preserveAll = el.dataset.scramblePreserve === "1" || el.classList.contains("scramble-preserve");
     let chars = [];
     let animatable = [];
     function processNode(node, parent) {
@@ -111,7 +112,7 @@ export function initScramble() {
       if (node.nodeType === Node.ELEMENT_NODE) {
         // Convert existing scramble chars back to plain text nodes
         if (node.classList && node.classList.contains("scramble-char")) {
-          return document.createTextNode(node.dataset.original || node.textContent || "");
+          return document.createTextNode(node.textContent || node.dataset.original || "");
         }
         const clone = node.cloneNode(false);
         Array.from(node.childNodes).forEach(child => {
@@ -126,6 +127,19 @@ export function initScramble() {
     function rebuildFrom(nodes){
       el.innerHTML = "";
       chars = [];
+      if (preserveAll) {
+        const text = nodes.map(n => n.textContent || "").join("");
+        Array.from(text).forEach(ch => {
+          const span = document.createElement("span");
+          span.className = "scramble-char";
+          span.dataset.original = ch;
+          span.textContent = ch === " " ? "\u00A0" : ch;
+          el.appendChild(span);
+          chars.push(span);
+        });
+        animatable = chars.filter(s => s.dataset.original.trim() !== "");
+        return;
+      }
       nodes.forEach(n => processNode(n, el));
       animatable = Array.from(el.querySelectorAll('.scramble-char')).filter(s => {
         if (s.dataset.scramblePreserve === "1") return true;
@@ -290,13 +304,10 @@ export function initScramble() {
 
     const playEffectTwo = (onDone) => {
       rebuildFrom(Array.from(el.childNodes).map(n => snapshotNode(n)));
-      if (running) {
-        killTweens();
-        running = false;
-      }
       if (animatable.length === 0) { onDone && onDone(); return; }
-      running = true;
+      clearLegacyTimers();
       killTweens();
+      running = true;
       setOriginalText();
       showScramble(el);
       let completed = 0;
@@ -345,9 +356,9 @@ export function initScramble() {
     const playLegacyHover = (onDone) => {
       rebuildFrom(Array.from(el.childNodes).map(n => snapshotNode(n)));
       clearLegacyTimers();
-      if (running || animatable.length === 0) { onDone && onDone(); return; }
-      running = true;
+      if (animatable.length === 0) { onDone && onDone(); return; }
       killTweens();
+      running = true;
       setOriginalText();
       showScramble(el);
       let completed = 0;
@@ -428,12 +439,11 @@ export function initScramble() {
       }
     };
 
-    const startHoverHandlers = () => {
-      const startLoopingHover = () => {
-        clearHoverLoop();
-        clearLegacyTimers();
-        let first = true;
-        const runLoop = () => {
+      const startHoverHandlers = () => {
+        const startLoopingHover = () => {
+          clearHoverLoop();
+          clearLegacyTimers();
+          const runLoop = () => {
           if (!hovering || pendingBack) {
             pendingBack = false;
             animateBack();
@@ -449,13 +459,9 @@ export function initScramble() {
             hoverLoopTimer = setTimeout(runLoop, loopPause);
           });
         };
-        if (loopStartDelay > 0 && first) {
-          first = false;
-          hoverLoopTimer = setTimeout(runLoop, loopStartDelay);
-        } else {
-          first = false;
-          runLoop();
-        }
+        const delay = Math.max(0, loopStartDelay);
+        if (delay === 0) runLoop();
+        else hoverLoopTimer = setTimeout(runLoop, delay);
       };
 
       const startSingleHover = () => {
@@ -473,6 +479,10 @@ export function initScramble() {
       const onEnter = () => {
         hovering = true;
         pendingBack = false;
+        running = false;
+        clearHoverLoop();
+        clearLegacyTimers();
+        killTweens();
         if (isLoop) {
           startLoopingHover();
         } else {
@@ -523,6 +533,13 @@ export function initScramble() {
 
   function initAll(){
     document.querySelectorAll(".scramble-text").forEach(initOne);
+    // Safety: if anything is still hidden after init, reveal baseline text
+    document.querySelectorAll(".scramble-text").forEach(el => {
+      if (el.style.visibility === "hidden") {
+        el.style.visibility = "visible";
+        el.style.opacity = "1";
+      }
+    });
     const scrollEls = Array.from(document.querySelectorAll('.scramble-scroll'));
     scrollEls.forEach(el => {
       if (!el.dataset.scrambleScrollVisible || el.dataset.scrambleScrollVisible === '0') {
