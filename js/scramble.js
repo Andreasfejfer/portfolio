@@ -24,7 +24,7 @@ export function initScramble() {
   const LEGACY_HOVER_SPEED = 120;
   let preloaderJustFinished = false;
 
-  const hasGsap = typeof window !== "undefined" && typeof gsap !== "undefined";
+  const hasGsap = () => (typeof window !== "undefined" && typeof window.gsap !== "undefined");
 
   const pickRandom = () => LETTERS_AND_SYMBOLS[Math.floor(Math.random() * LETTERS_AND_SYMBOLS.length)];
   const pickLegacy = () => LEGACY_SYMBOLS[Math.floor(Math.random() * LEGACY_SYMBOLS.length)];
@@ -174,15 +174,15 @@ export function initScramble() {
         span.textContent = ch === " " ? "\u00A0" : ch;
         span.style.setProperty('--opa', '0');
       });
-      if (hasGsap) {
+      if (hasGsap()) {
         gsap.set(el, { '--anim': 0 });
       }
     };
 
     const killTweens = () => {
-      if (!hasGsap) return;
-      gsap.killTweensOf(chars);
-      gsap.killTweensOf(el);
+      if (!hasGsap()) return;
+      window.gsap.killTweensOf(chars);
+      window.gsap.killTweensOf(el);
     };
 
     const clearLegacyTimers = () => {
@@ -204,7 +204,7 @@ export function initScramble() {
         const original = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
         let repeatCount = 0;
 
-        if (!hasGsap) {
+        if (!hasGsap()) {
           span.textContent = original;
           completed++;
           if (completed >= animatable.length) {
@@ -214,7 +214,7 @@ export function initScramble() {
           return;
         }
 
-        gsap.fromTo(span, { opacity: 0 }, {
+        window.gsap.fromTo(span, { opacity: 0 }, {
           duration: EFFECT1.duration,
           repeat: EFFECT1.repeat,
           repeatRefresh: true,
@@ -317,7 +317,7 @@ export function initScramble() {
       animatable.forEach((span, idx) => {
         const original = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
 
-        if (!hasGsap) {
+        if (!hasGsap()) {
           span.textContent = original;
           completed++;
           if (completed >= animatable.length) {
@@ -327,7 +327,7 @@ export function initScramble() {
           return;
         }
 
-        gsap.fromTo(span, { opacity: 0 }, {
+        window.gsap.fromTo(span, { opacity: 0 }, {
           duration: EFFECT2.duration,
           repeat: EFFECT2.repeat,
           repeatRefresh: true,
@@ -346,8 +346,8 @@ export function initScramble() {
         });
       });
 
-      if (hasGsap) {
-        gsap.fromTo(el, { '--anim': 0 }, {
+      if (hasGsap()) {
+        window.gsap.fromTo(el, { '--anim': 0 }, {
           duration: EFFECT2.bgDuration,
           ease: EFFECT2.bgEase,
           '--anim': 1
@@ -417,10 +417,10 @@ export function initScramble() {
 
     const animateBack = () => {
       clearLegacyTimers();
-      if (hasGsap) {
-        gsap.killTweensOf(chars);
-        gsap.killTweensOf(el);
-        gsap.to(el, {
+      if (hasGsap()) {
+        window.gsap.killTweensOf(chars);
+        window.gsap.killTweensOf(el);
+        window.gsap.to(el, {
           duration: EFFECT2.bgBackDuration,
           ease: EFFECT2.bgBackEase,
           '--anim': 0,
@@ -444,16 +444,16 @@ export function initScramble() {
     };
 
       const startHoverHandlers = () => {
-        const startLoopingHover = () => {
-          clearHoverLoop();
-          clearLegacyTimers();
-          const runLoop = () => {
+      const startLoopingHover = () => {
+        clearHoverLoop();
+        clearLegacyTimers();
+        const runLoop = () => {
           if (!hovering || pendingBack) {
             pendingBack = false;
             animateBack();
             return;
           }
-          const runner = isLoop ? playLegacyHover : playEffectTwo;
+          const runner = (isLoop || !hasGsap()) ? playLegacyHover : playEffectTwo;
           runner(() => {
             if (!hovering || pendingBack) {
               pendingBack = false;
@@ -473,7 +473,7 @@ export function initScramble() {
         clearLegacyTimers();
         killTweens();
         running = false;
-        const runner = isLoop ? playLegacyHover : playEffectTwo;
+        const runner = (isLoop || !hasGsap()) ? playLegacyHover : playEffectTwo;
         runner(() => {
           if (!hovering || pendingBack) {
             pendingBack = false;
