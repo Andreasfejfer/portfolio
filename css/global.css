@@ -96,7 +96,7 @@
    ========================= */
 .scramble-text,
 .scramble-text.scramble-scroll{
-  visibility:hidden;
+  visibility:hidden !important;
 }
 .scramble-text{display:inline-block;line-height:1.1;visibility:hidden}
 .scramble-char{display:inline-block;position:relative;padding:0.08em 0;line-height:1;background:transparent;color:inherit;transition:background-color .12s ease,color .12s ease;vertical-align:middle;letter-spacing:inherit;white-space:pre}
