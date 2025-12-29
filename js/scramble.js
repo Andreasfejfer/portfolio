@@ -308,10 +308,22 @@ export function initScramble() {
   }
 
   function initAll(){
-    document.querySelectorAll(".scramble-text").forEach(initOne);
+    document.querySelectorAll(".scramble-text").forEach(el => {
+      const parentScramble = el.parentElement ? el.parentElement.closest(".scramble-text") : null;
+      if (parentScramble && parentScramble !== el) {
+        // Nested scramble-text: show as-is and skip init so it animates with parent text
+        el.dataset.scrambleInit = "nested-skip";
+        el.style.visibility = "visible";
+        el.style.opacity = "1";
+        return;
+      }
+      initOne(el);
+    });
     // Safety: unhide any scramble text that somehow stayed hidden, restore original chars
     setTimeout(() => {
       document.querySelectorAll(".scramble-text").forEach(el => {
+        const parentScramble = el.parentElement ? el.parentElement.closest(".scramble-text") : null;
+        if (parentScramble && parentScramble !== el) return;
         // Don't auto-unhide scroll scrambles until they've been triggered
         if (el.classList.contains('scramble-scroll') && el.dataset.scrambleScrollVisible !== '1') return;
         const hidden = (el.style.visibility === "hidden") || (el.style.opacity === "0");
