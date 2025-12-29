@@ -171,3 +171,35 @@ html.preloader-active .scramble-text{visibility:hidden}
   width:0;
   border-left:1px dashed rgba(0, 0, 0, 0.07);
 }
+.background-black{
+  position:fixed;
+  inset:0;
+  padding:0 15vw;
+  box-sizing:border-box;
+  pointer-events:none;
+  z-index:0;
+  overflow:hidden;
+}
+.background-black .background__line{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:0;
+  border-left:1px dashed rgba(255, 255, 255, 0.12);
+}
+.background-preloader{
+  position:absolute;
+  inset:0;
+  padding:0 15vw;
+  box-sizing:border-box;
+  pointer-events:none;
+  z-index:1;
+  overflow:hidden;
+}
+.background-preloader .background__line{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:0;
+  border-left:1px dashed rgba(0, 0, 0, 0.07);
+}
