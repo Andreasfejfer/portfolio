@@ -174,7 +174,11 @@ export function initScramble() {
     };
 
     const playEffectTwo = (onDone) => {
-      if (running || animatable.length === 0) { onDone && onDone(); return; }
+      if (running) {
+        killTweens();
+        running = false;
+      }
+      if (animatable.length === 0) { onDone && onDone(); return; }
       running = true;
       killTweens();
       setOriginalText();
