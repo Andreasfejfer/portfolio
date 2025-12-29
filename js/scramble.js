@@ -80,6 +80,20 @@ export function initScramble() {
       } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "BR") {
         parent.appendChild(document.createElement("br"));
       } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const preserve = node.dataset.scramblePreserve === "1" || node.classList.contains("scramble-preserve");
+        if (preserve) {
+          const clone = node.cloneNode(false);
+          parent.appendChild(clone);
+          Array.from(node.textContent).forEach(ch => {
+            const span = document.createElement("span");
+            span.className = "scramble-char";
+            span.dataset.original = ch;
+            span.textContent = ch === " " ? "\u00A0" : ch;
+            clone.appendChild(span);
+            chars.push(span);
+          });
+          return;
+        }
         const clone = node.cloneNode(false);
         parent.appendChild(clone);
         Array.from(node.childNodes).forEach(child => processNode(child, clone));
@@ -129,6 +143,7 @@ export function initScramble() {
     const clearLegacyTimers = () => {
       legacyTimers.forEach(t => clearTimeout(t));
       legacyTimers = [];
+      running = false;
     };
 
     const playEffectOne = (onDone) => {
@@ -325,6 +340,7 @@ export function initScramble() {
       const startLoopingHover = () => {
         clearHoverLoop();
         clearLegacyTimers();
+        let first = true;
         const runLoop = () => {
           if (!hovering || pendingBack) {
             pendingBack = false;
@@ -341,10 +357,11 @@ export function initScramble() {
             hoverLoopTimer = setTimeout(runLoop, loopPause);
           });
         };
-        // respect optional start delay
-        if (loopStartDelay > 0) {
+        if (loopStartDelay > 0 && first) {
+          first = false;
           hoverLoopTimer = setTimeout(runLoop, loopStartDelay);
         } else {
+          first = false;
           runLoop();
         }
       };
