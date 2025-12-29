@@ -86,6 +86,12 @@ export function initScramble() {
     let hoverTimer = null;
     let pendingBack = false;
 
+    const clearTimers = (list) => {
+      if (!list) return;
+      list.forEach(t => clearTimeout(t));
+      list.length = 0;
+    };
+
     const clearHoverTimer = () => {
       if (hoverTimer) {
         clearTimeout(hoverTimer);
@@ -279,15 +285,22 @@ export function initScramble() {
 
   function initAll(){
     document.querySelectorAll(".scramble-text").forEach(initOne);
-    // Safety: unhide any scramble text that somehow stayed hidden
+    // Safety: unhide any scramble text that somehow stayed hidden, restore original chars
     setTimeout(() => {
       document.querySelectorAll(".scramble-text").forEach(el => {
-        if (el.style.visibility === "hidden") {
+        const hidden = (el.style.visibility === "hidden") || (el.style.opacity === "0");
+        if (hidden) {
+          el.querySelectorAll('.scramble-char').forEach(span => {
+            const ch = span.dataset.original || span.textContent || "";
+            span.classList.remove("active-current","active-trail");
+            span.textContent = ch === " " ? "\u00A0" : ch;
+          });
           el.style.visibility = "visible";
           el.style.opacity = "1";
+          el.classList.add('scramble-visible');
         }
       });
-    }, 3000);
+    }, 3500);
     // Scramble-scroll logic
     const scrollEls = Array.from(document.querySelectorAll('.scramble-scroll'));
     scrollEls.forEach(el => {
