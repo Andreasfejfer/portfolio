@@ -163,12 +163,6 @@ html.preloader-active .scramble-text{visibility:hidden}
   pointer-events:none;
   z-index:0;
   overflow:hidden;
-  background-image:
-    repeating-linear-gradient(90deg, transparent 0, transparent 119px, rgba(0,0,0,0.07) 119px, rgba(0,0,0,0.07) 120px),
-    repeating-linear-gradient(180deg, rgba(0,0,0,0.07) 0, rgba(0,0,0,0.07) 6px, transparent 6px, transparent 14px);
-  background-size:120px 100%, 120px 14px;
-  background-repeat:repeat;
-  background-blend-mode:multiply;
 }
 .background__line{
   position:absolute;
@@ -183,14 +177,8 @@ html.preloader-active .scramble-text{visibility:hidden}
   padding:0 15vw;
   box-sizing:border-box;
   pointer-events:none;
-  z-index:2;
+  z-index:0;
   overflow:hidden;
-  background-image:
-    repeating-linear-gradient(90deg, transparent 0, transparent 119px, rgba(255,255,255,0.18) 119px, rgba(255,255,255,0.18) 120px),
-    repeating-linear-gradient(180deg, rgba(255,255,255,0.18) 0, rgba(255,255,255,0.18) 6px, transparent 6px, transparent 14px);
-  background-size:120px 100%, 120px 14px;
-  background-repeat:repeat;
-  background-blend-mode:multiply;
 }
 .background-black .background__line{
   position:absolute;
@@ -207,17 +195,11 @@ html.preloader-active .scramble-text{visibility:hidden}
   pointer-events:none;
   z-index:50;
   overflow:hidden;
-  background-image:
-    repeating-linear-gradient(90deg, transparent 0, transparent 119px, rgba(0,0,0,0.16) 119px, rgba(0,0,0,0.16) 120px),
-    repeating-linear-gradient(180deg, rgba(0,0,0,0.16) 0, rgba(0,0,0,0.16) 6px, transparent 6px, transparent 14px);
-  background-size:120px 100%, 120px 14px;
-  background-repeat:repeat;
-  background-blend-mode:multiply;
 }
 .background-preloader .background__line{
   position:absolute;
   top:0;
   bottom:0;
   width:0;
-  border-left:1px dashed rgba(0, 0, 0, 0.16);
+  border-left:1px dashed rgba(0, 0, 0, 0.07);
 }
