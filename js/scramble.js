@@ -9,6 +9,14 @@ export function initScramble() {
   let preloaderJustFinished = false;
 
   const randSymbol = () => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+  const hideScramble = (el) => {
+    el.classList.remove('scramble-visible');
+    el.style.visibility = 'hidden';
+  };
+  const showScramble = (el) => {
+    el.classList.add('scramble-visible');
+    el.style.visibility = 'visible';
+  };
 
   const readVarMs = (el, varName, fallback=0) => {
     const v = getComputedStyle(el).getPropertyValue(varName).trim();
@@ -30,7 +38,7 @@ export function initScramble() {
 
     // If .scramble-scroll, always start hidden and mark as not revealed
     if (isScrollScramble) {
-      el.style.visibility = 'hidden';
+      hideScramble(el);
       el.dataset.scrambleScrollVisible = '0';
     }
 
@@ -85,7 +93,7 @@ export function initScramble() {
     
 
     // hide until entry reveal begins (unless we short-circuit for head after preloader)
-    el.style.visibility = "hidden";
+    hideScramble(el);
 
     let running = false;
     let loadTimers = [];
@@ -99,7 +107,7 @@ export function initScramble() {
       clearTimers(loadTimers);
 
       // show exactly when entry starts
-      el.style.visibility = "visible";
+      showScramble(el);
 
       // start hidden
       chars.forEach(s => {
@@ -236,7 +244,7 @@ export function initScramble() {
         span.classList.remove("active-current","active-trail");
         span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
       });
-      el.style.visibility = "visible";
+      showScramble(el);
       startHoverLoop();
       return;
     }
@@ -265,7 +273,7 @@ export function initScramble() {
     const scrollEls = Array.from(document.querySelectorAll('.scramble-scroll'));
     scrollEls.forEach(el => {
       if (!el.dataset.scrambleScrollVisible || el.dataset.scrambleScrollVisible === '0') {
-        el.style.visibility = 'hidden';
+        hideScramble(el);
       }
     });
     const footerEl = document.querySelector('.footer');
@@ -279,7 +287,7 @@ export function initScramble() {
     function triggerScramble(el) {
       el.dataset.scrambleScrollDone = '1';
       el.dataset.scrambleScrollVisible = '1';
-      el.style.visibility = 'visible';
+      showScramble(el);
       const trigger = el.__scrambleTrigger;
       if (typeof trigger === "function") {
         trigger();
