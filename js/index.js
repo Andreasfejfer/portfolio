@@ -4,7 +4,7 @@ import { initMarquee } from './marquee.js';
 document.addEventListener('DOMContentLoaded', () => {
 	if (document.body.classList.contains('page-index')) {
 		document.querySelectorAll('.s-marquee').forEach(el => {
-			initMarquee({ selector: el, speed: 20 });
+			initMarquee({ selector: el, speed: 40 });
 		});
 	}
 });
