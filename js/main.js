@@ -477,6 +477,8 @@ function initCmsReturnTitleFloat({
 // Hint browser to prefetch likely next page(s)
 function initPrefetchNext() {
   const PREFETCH_URLS = [
+    "https://andreas-fejfer.webflow.io/",
+    "https://andreas-fejfer.webflow.io/about",
     "https://andreas-fejfer.webflow.io/work-index"
   ];
   PREFETCH_URLS.forEach(url => {
