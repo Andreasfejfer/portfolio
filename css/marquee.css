@@ -38,3 +38,11 @@
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
+
+/* Mobile: show roughly two images at once */
+@media (max-width: 767px) {
+  .marquee {
+    --img-width: 48vw;
+    --img-padding: 4vw;
+  }
+}
