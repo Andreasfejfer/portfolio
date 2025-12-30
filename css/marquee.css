@@ -1,4 +1,4 @@
-/* Marquee styles for 2:1 ratio, 30% width, 10% split padding */
+/* Marquee styles for 3:2 ratio, 30% width, 10% split padding */
 .marquee {
   display: flex;
   overflow: hidden;
@@ -10,7 +10,7 @@
 }
 .marquee_img {
   flex: 0 0 var(--img-width);
-  aspect-ratio: 2 / 1;
+  aspect-ratio: 3 / 2;
   width: var(--img-width);
   margin: 0 calc(var(--img-padding) / 2);
   object-fit: cover;
