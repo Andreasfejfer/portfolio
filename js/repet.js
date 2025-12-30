@@ -52,11 +52,22 @@ class RepetEffect {
     this.animationFrame = null;
     this.hoverTimeline = null;
     this.isInView = false;
+    this.enableScrollEffect = this.shouldEnableScrollEffect();
+    if (!this.enableScrollEffect) {
+      this.isInView = true;
+    }
 
     this.bgImage = this.resolveImageUrl();
     if (!this.bgImage) return;
 
     this.init();
+  }
+
+  shouldEnableScrollEffect() {
+    const scrollPref = (this.el.dataset.repetScroll || "").toLowerCase();
+    if (scrollPref === "off" || scrollPref === "false") return false;
+    if (this.el.classList.contains("repet--no-scroll")) return false;
+    return true;
   }
 
   resolveImageUrl() {
@@ -81,7 +92,9 @@ class RepetEffect {
     this.createLayers();
     this.createLayerOutlines();
     this.createHoverTimeline();
-    this.observeVisibility();
+    if (this.enableScrollEffect) {
+      this.observeVisibility();
+    }
     this.bindEvents();
     this.startAnimationLoop();
   }
