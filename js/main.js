@@ -491,10 +491,43 @@ function initPrefetchNext() {
   });
 }
 
+function initHeaderOnBlackBox() {
+  const headers = Array.from(document.querySelectorAll(".scramble-text.head.scramble-once"));
+  const boxes = Array.from(document.querySelectorAll(".black_box"));
+  if (!headers.length || !boxes.length) return;
+
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    headers.forEach(header => {
+      const rect = header.getBoundingClientRect();
+      const isOnBlack = boxes.some(box => {
+        const boxRect = box.getBoundingClientRect();
+        return rect.bottom > boxRect.top &&
+          rect.top < boxRect.bottom &&
+          rect.right > boxRect.left &&
+          rect.left < boxRect.right;
+      });
+      header.classList.toggle("is-on-black-box", isOnBlack);
+    });
+  };
+
+  const requestUpdate = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(update);
+  };
+
+  update();
+  window.addEventListener("scroll", requestUpdate, { passive: true });
+  window.addEventListener("resize", requestUpdate);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initPageFade();
   initSmoothScrollAnchors();
   initPrefetchNext();
+  initHeaderOnBlackBox();
   initRepet();
   initBackground();
   initScrollBlurHeadings();

@@ -113,6 +113,8 @@
 .scramble-char.active-current,.scramble-char.active-trail{background-color:#000!important;color:#fff!important;border-radius:0;padding:0.08em 0}
 .scramble-char{box-decoration-break:clone;-webkit-box-decoration-break:clone}
 .scramble-grey .scramble-char.active-current,.scramble-grey .scramble-char.active-trail{background-color:#8b8b8b!important;color:#fff!important}
+.black_box .scramble-text.head.scramble-once{color:#fff}
+.scramble-text.head.scramble-once.is-on-black-box{color:#fff}
 
 /* Hide index wrapper until JS reveals (prevents return flicker) */
 body.page-index .page_wrapper{opacity:0}
