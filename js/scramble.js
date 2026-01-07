@@ -52,7 +52,12 @@ export function initScramble() {
     const chars = [];
     if (preserveAll) {
       const txt = originalNodes.map(n => n.textContent || "").join("");
-      Array.from(txt).forEach(ch => {
+      const normalized = txt.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+      Array.from(normalized).forEach(ch => {
+        if (ch === "\n") {
+          el.appendChild(document.createElement("br"));
+          return;
+        }
         const span = document.createElement("span");
         span.className = "scramble-char";
         span.dataset.original = ch;
@@ -63,7 +68,12 @@ export function initScramble() {
     } else {
       function processNode(node, parent) {
         if (node.nodeType === Node.TEXT_NODE) {
-          Array.from(node.textContent).forEach(ch => {
+          const normalized = (node.textContent || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+          Array.from(normalized).forEach(ch => {
+            if (ch === "\n") {
+              parent.appendChild(document.createElement("br"));
+              return;
+            }
             const span = document.createElement("span");
             span.className = "scramble-char";
             span.dataset.original = ch;
