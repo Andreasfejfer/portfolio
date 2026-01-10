@@ -10,6 +10,22 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
   const images = Array.from(marquee.querySelectorAll('.marquee__img'));
   if (!images.length) return;
 
+  const setupVideo = video => {
+    video.autoplay = true;
+    video.loop = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.controls = false;
+    video.setAttribute('autoplay', '');
+    video.setAttribute('loop', '');
+    video.setAttribute('muted', '');
+    video.setAttribute('playsinline', '');
+    video.removeAttribute('controls');
+    video.play().catch(() => {});
+  };
+
+  marquee.querySelectorAll('.marquee_video').forEach(setupVideo);
+
   // Assign a unique data-marquee-id to each image (before duplication)
   images.forEach((img, i) => {
     img.dataset.marqueeId = i;
@@ -31,6 +47,8 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
   if (track.children.length === images.length) {
     track.innerHTML += track.innerHTML;
   }
+
+  track.querySelectorAll('.marquee_video').forEach(setupVideo);
 
   // Set animation duration based on speed
   track.style.animationDuration = speed + 's';
