@@ -1,8 +1,8 @@
 // Infinite Marquee Animation Module
 // Usage: import { initMarquee } from './marquee.js';
-//        initMarquee({ selector: '.marquee', speed: 20 });
+//        initMarquee({ selector: '.marquee', speed: 30 });
 
-export function initMarquee({ selector = '.marquee', speed = 20 } = {}) {
+export function initMarquee({ selector = '.marquee', speed = 30 } = {}) {
   const marquee = typeof selector === 'string' ? document.querySelector(selector) : selector;
   if (!marquee) return;
 
