@@ -156,11 +156,22 @@ html.preloader-active .scramble-text{visibility:hidden}
 /* Keep page wrapper fades smooth */
 .page_wrapper{will-change:opacity}
 
+/* Background alignment system (single source of truth) */
+:root{
+  --bg-padding-x:15vw;
+  --bg-pair-gap:20px;
+  --bg-pairs-desktop:11;
+  --bg-pairs-laptop:9;
+  --bg-pairs-tablet:7;
+  --bg-pairs-mobile:5;
+  --bg-pairs-tiny:3;
+}
+
 /* Vertical dashed background pairs */
 .background{
   position:fixed;
   inset:0;
-  padding:0 15vw;
+  padding:0 var(--bg-padding-x);
   box-sizing:border-box;
   pointer-events:none;
   z-index:0;
@@ -176,7 +187,7 @@ html.preloader-active .scramble-text{visibility:hidden}
 .blackbg{
   position:absolute;
   inset:0;
-  padding:0 15vw;
+  padding:0 var(--bg-padding-x);
   box-sizing:border-box;
   pointer-events:none;
   z-index:0;
