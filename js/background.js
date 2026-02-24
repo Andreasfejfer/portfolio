@@ -66,15 +66,23 @@ export function initBackground() {
     root.dataset.backgroundInit = "1";
 
     const render = () => {
-      const availableWidth = Math.max(root.clientWidth || 0, 1);
+      const documentWidth = document.documentElement.clientWidth || window.innerWidth;
+      const scrollbarWidth = Math.max(0, window.innerWidth - documentWidth);
       const styles = getComputedStyle(root);
+      const isFixed = styles.position === "fixed";
+
+      // Keep fixed background width aligned with the document content box (excludes scrollbar width).
+      root.style.left = "0px";
+      root.style.right = isFixed ? `${scrollbarWidth}px` : "0px";
+
+      const availableWidth = Math.max(root.clientWidth || 0, 1);
       const paddingLeft = parseFloat(styles.paddingLeft) || 0;
       const paddingRight = parseFloat(styles.paddingRight) || 0;
       const available = availableWidth - paddingLeft - paddingRight;
       if (available <= 0) return;
 
       const pairGap = resolvePairGapPx(styles);
-      const pairCount = resolvePairCount(window.innerWidth, styles);
+      const pairCount = resolvePairCount(documentWidth, styles);
       const pairSpacing = pairCount > 1 ? available / (pairCount - 1) : available;
 
       const totalSpan = (pairCount - 1) * pairSpacing;
