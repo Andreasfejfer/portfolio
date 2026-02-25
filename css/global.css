@@ -116,8 +116,11 @@
 .black_box .scramble-text.head.scramble-once{color:#fff}
 .scramble-text.head.scramble-once.is-on-black-box{color:#fff}
 
-/* Hide index wrapper until JS reveals (prevents return flicker) */
-body.page-index .page_wrapper{opacity:0}
+/* Keep wrapper hidden until JS-driven enter animation runs (prevents first-paint flashes). */
+.page_wrapper{
+  opacity:0;
+  transform:translate3d(0,22px,0);
+}
 
 /* Load delay (ms) before entry reveal starts */
 .scramble-delay-2000{--scramble-load-delay:2000}
@@ -153,8 +156,8 @@ html.preloader-lock, body.preloader-lock{height:100%;overflow:hidden}
 /* Prevent main scramble flash before script runs */
 html.preloader-active .scramble-text{visibility:hidden}
 
-/* Keep page wrapper fades smooth */
-.page_wrapper{will-change:opacity}
+/* Keep page wrapper transitions smooth */
+.page_wrapper{will-change:opacity,transform}
 
 /* Background alignment system (single source of truth) */
 :root{
