@@ -636,11 +636,9 @@ document.addEventListener("DOMContentLoaded", () => {
   initBackground();
   initScrollBlurHeadings();
   initAutoNameReveal();
+  initRevealNames();
   if (onAboutPage) {
-    initRevealNames({ selector: ".name, .sc1" });
     initAboutEnterEffects();
-  } else {
-    initRevealNames();
   }
 
   if (document.body.classList.contains("page-home")) {
