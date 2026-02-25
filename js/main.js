@@ -231,7 +231,7 @@ function splitNameCharsForAuto(el) {
   return chars;
 }
 
-function initAboutAutoNameReveal({ selector = ".name_ow, .name_ow.auto, .name_ow .auto", durationSeconds = 3 } = {}) {
+function initAutoNameReveal({ selector = ".name_ow.auto, .name_ow .auto", durationSeconds = 3 } = {}) {
   if (typeof gsap === "undefined") return;
 
   document.querySelectorAll(selector).forEach(el => {
@@ -281,7 +281,7 @@ function initAboutEnterEffects({ fadeDurationMs = 1200, nameDurationSeconds = 3 
     });
   }
 
-  initAboutAutoNameReveal({ durationSeconds: nameDurationSeconds });
+  initAutoNameReveal({ durationSeconds: nameDurationSeconds });
 }
 
 function initSmoothScrollAnchors({
@@ -618,6 +618,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initRepet();
   initBackground();
   initScrollBlurHeadings();
+  initAutoNameReveal();
   if (onAboutPage) {
     initRevealNames({ selector: ".name, .sc1" });
     initAboutEnterEffects();
