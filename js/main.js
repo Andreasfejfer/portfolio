@@ -245,6 +245,63 @@ function initPageFade({ durationMs = 2000 } = {}) {
   }, true);
 }
 
+function loadLenisFromCdn() {
+  return new Promise(resolve => {
+    if (typeof window.Lenis !== "undefined") {
+      resolve(true);
+      return;
+    }
+
+    const existing = document.querySelector("script[data-lenis-cdn='1']");
+    if (existing) {
+      existing.addEventListener("load", () => resolve(typeof window.Lenis !== "undefined"));
+      existing.addEventListener("error", () => resolve(false));
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.23/bundled/lenis.min.js";
+    script.async = true;
+    script.dataset.lenisCdn = "1";
+    script.onload = () => resolve(typeof window.Lenis !== "undefined");
+    script.onerror = () => resolve(false);
+    document.head.appendChild(script);
+  });
+}
+
+function initLenisSmoothScroll() {
+  if (window.__LENIS_INIT === true) return;
+
+  const reduceMotionQuery = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
+  if (reduceMotionQuery && reduceMotionQuery.matches) return;
+
+  loadLenisFromCdn().then(ok => {
+    if (!ok || typeof window.Lenis === "undefined") return;
+    if (window.__LENIS_INIT === true) return;
+
+    const lenis = new window.Lenis({
+      lerp: 0.05,
+      wheelMultiplier: 1,
+      smoothTouch: false
+    });
+
+    window.__LENIS_INIT = true;
+    window.__LENIS_INSTANCE = lenis;
+
+    lenis.on("scroll", () => {
+      if (typeof window.ScrollTrigger !== "undefined" && typeof window.ScrollTrigger.update === "function") {
+        window.ScrollTrigger.update();
+      }
+    });
+
+    const raf = time => {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    };
+    requestAnimationFrame(raf);
+  });
+}
+
 function splitNameCharsForAuto(el) {
   if (el.dataset.nameSplit === "1") {
     return Array.from(el.querySelectorAll(".name__char"));
@@ -658,6 +715,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const onAboutPage = isAboutPage();
 
   initPageFade();
+  initLenisSmoothScroll();
   initSmoothScrollAnchors();
   initPrefetchNext();
   initHeaderOnBlackBox();
