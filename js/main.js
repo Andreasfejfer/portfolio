@@ -41,6 +41,16 @@ let __PAGE_INDEX_RETURN_Y = null;
   }
 })();
 
+const __ABOUT_ENTER_PRIMED = (() => {
+  const path = (window.location.pathname || "").toLowerCase();
+  const isAboutPath = /(^|\/)about(\/|$)/.test(path);
+  if (!isAboutPath) return false;
+  // Prevent first-paint flash before JS applies about enter fade.
+  document.documentElement.style.visibility = "hidden";
+  document.documentElement.dataset.enteringAbout = "1";
+  return true;
+})();
+
 
 function waitForImages(track) {
   const images = Array.from(track.querySelectorAll('img'));
@@ -275,10 +285,17 @@ function initAboutEnterEffects({ fadeDurationMs = 1200, nameDurationSeconds = 3 
     wrapper.style.willChange = "opacity";
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
+        if (__ABOUT_ENTER_PRIMED || document.documentElement.dataset.enteringAbout === "1") {
+          document.documentElement.style.visibility = "visible";
+          delete document.documentElement.dataset.enteringAbout;
+        }
         wrapper.style.transition = `opacity ${fadeDurationMs}ms ease`;
         wrapper.style.opacity = "1";
       });
     });
+  } else if (__ABOUT_ENTER_PRIMED || document.documentElement.dataset.enteringAbout === "1") {
+    document.documentElement.style.visibility = "visible";
+    delete document.documentElement.dataset.enteringAbout;
   }
 
   initAutoNameReveal({ durationSeconds: nameDurationSeconds });
