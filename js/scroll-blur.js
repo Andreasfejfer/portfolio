@@ -162,6 +162,8 @@ export function initRevealNames({
     document.querySelectorAll(selector).forEach(el => {
       if (el.dataset.nameInit === "1") return;
       if (el.classList.contains("m_title")) return;
+      if (el.classList.contains("auto")) return;
+      if (el.classList.contains("name_ow") && el.querySelector(".auto")) return;
       const chars = splitNameIntoWordsAndChars(el);
       if (!chars.length) return;
 
@@ -199,5 +201,36 @@ export function initRevealNames({
         toState
       );
     });
+  });
+}
+
+export function initRevealNamesAuto({
+  selector = ".name_ow.auto, .name_ow .auto",
+  durationSeconds = 3
+} = {}) {
+  if (typeof gsap === "undefined") return;
+
+  document.querySelectorAll(selector).forEach(el => {
+    if (el.dataset.nameInit === "1") return;
+    if (el.classList.contains("m_title")) return;
+    const chars = splitNameIntoWordsAndChars(el);
+    if (!chars.length) return;
+
+    el.dataset.nameInit = "1";
+
+    const charDuration = Math.max(0.25, Math.min(0.8, durationSeconds * 0.35));
+    const staggerAmount = Math.max(0, durationSeconds - charDuration);
+
+    gsap.fromTo(
+      chars,
+      { filter: "blur(10px)", opacity: 0, willChange: "filter,opacity" },
+      {
+        ease: "none",
+        filter: "blur(0px)",
+        opacity: 1,
+        duration: charDuration,
+        stagger: { amount: staggerAmount, from: "start" }
+      }
+    );
   });
 }

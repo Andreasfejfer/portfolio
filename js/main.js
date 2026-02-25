@@ -153,7 +153,7 @@ import { initPreloader } from "./preloader.js";
 import { initScramble } from "./scramble.js";
 import { initRepet } from "./repet.js";
 import { initBackground } from "./background.js";
-import { initScrollBlurHeadings, initRevealNames } from "./scroll-blur.js";
+import { initScrollBlurHeadings, initRevealNames, initRevealNamesAuto } from "./scroll-blur.js";
 
 // Simple page fade-out on internal navigation (no fade-in to avoid header flicker)
 function initPageFade({ durationMs = 2000 } = {}) {
@@ -197,6 +197,27 @@ function initPageFade({ durationMs = 2000 } = {}) {
       window.location.href = href;
     }, durationMs);
   }, true);
+}
+
+function initAboutEnterEffects({ fadeDurationMs = 1200, nameDurationSeconds = 3 } = {}) {
+  if (!document.body.classList.contains("page-about")) return;
+
+  const wrapper = document.querySelector(".page_wrapper");
+  if (wrapper) {
+    wrapper.style.opacity = "0";
+    wrapper.style.willChange = "opacity";
+    wrapper.style.transition = `opacity ${fadeDurationMs}ms ease`;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        wrapper.style.opacity = "1";
+      });
+    });
+  }
+
+  initRevealNamesAuto({
+    selector: ".name_ow.auto, .name_ow .auto",
+    durationSeconds: nameDurationSeconds
+  });
 }
 
 function initSmoothScrollAnchors({
@@ -532,6 +553,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initBackground();
   initScrollBlurHeadings();
   initRevealNames();
+  initAboutEnterEffects();
 
   if (document.body.classList.contains("page-home")) {
     initHomePage();

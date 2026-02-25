@@ -118,6 +118,7 @@
 
 /* Hide index wrapper until JS reveals (prevents return flicker) */
 body.page-index .page_wrapper{opacity:0}
+body.page-about .page_wrapper{opacity:0}
 
 /* Load delay (ms) before entry reveal starts */
 .scramble-delay-2000{--scramble-load-delay:2000}
