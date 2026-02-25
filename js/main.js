@@ -153,7 +153,7 @@ import { initPreloader } from "./preloader.js";
 import { initScramble } from "./scramble.js";
 import { initRepet } from "./repet.js";
 import { initBackground } from "./background.js";
-import { initScrollBlurHeadings, initRevealNames, initRevealNamesAuto } from "./scroll-blur.js";
+import { initScrollBlurHeadings, initRevealNames } from "./scroll-blur.js";
 
 // Simple page fade-out on internal navigation (no fade-in to avoid header flicker)
 function initPageFade({ durationMs = 2000 } = {}) {
@@ -199,25 +199,89 @@ function initPageFade({ durationMs = 2000 } = {}) {
   }, true);
 }
 
+function splitNameCharsForAuto(el) {
+  if (el.dataset.nameSplit === "1") {
+    return Array.from(el.querySelectorAll(".name__char"));
+  }
+
+  const text = el.textContent || "";
+  el.innerHTML = "";
+  const chars = [];
+  const tokens = text.split(/(\s+)/);
+
+  tokens.forEach(token => {
+    if (/^\s+$/.test(token)) {
+      el.appendChild(document.createTextNode(token));
+      return;
+    }
+    if (!token) return;
+    const word = document.createElement("span");
+    word.className = "name__word";
+    token.split("").forEach(ch => {
+      const c = document.createElement("span");
+      c.className = "name__char";
+      c.textContent = ch;
+      word.appendChild(c);
+      chars.push(c);
+    });
+    el.appendChild(word);
+  });
+
+  el.dataset.nameSplit = "1";
+  return chars;
+}
+
+function initAboutAutoNameReveal({ selector = ".name_ow, .name_ow.auto, .name_ow .auto", durationSeconds = 3 } = {}) {
+  if (typeof gsap === "undefined") return;
+
+  document.querySelectorAll(selector).forEach(el => {
+    if (el.dataset.nameAutoInit === "1") return;
+    if (el.classList.contains("m_title")) return;
+    const chars = splitNameCharsForAuto(el);
+    if (!chars.length) return;
+
+    el.dataset.nameAutoInit = "1";
+
+    const charDuration = Math.max(0.25, Math.min(0.8, durationSeconds * 0.35));
+    const staggerAmount = Math.max(0, durationSeconds - charDuration);
+
+    gsap.fromTo(
+      chars,
+      { filter: "blur(10px)", opacity: 0, willChange: "filter,opacity" },
+      {
+        ease: "none",
+        filter: "blur(0px)",
+        opacity: 1,
+        duration: charDuration,
+        stagger: { amount: staggerAmount, from: "start" }
+      }
+    );
+  });
+}
+
+function isAboutPage() {
+  if (document.body.classList.contains("page-about")) return true;
+  const path = (window.location.pathname || "").replace(/\/+$/, "");
+  return path === "/about" || path.endsWith("/about");
+}
+
 function initAboutEnterEffects({ fadeDurationMs = 1200, nameDurationSeconds = 3 } = {}) {
-  if (!document.body.classList.contains("page-about")) return;
+  if (!isAboutPage()) return;
 
   const wrapper = document.querySelector(".page_wrapper");
   if (wrapper) {
+    wrapper.style.transition = "none";
     wrapper.style.opacity = "0";
     wrapper.style.willChange = "opacity";
-    wrapper.style.transition = `opacity ${fadeDurationMs}ms ease`;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
+        wrapper.style.transition = `opacity ${fadeDurationMs}ms ease`;
         wrapper.style.opacity = "1";
       });
     });
   }
 
-  initRevealNamesAuto({
-    selector: ".name_ow.auto, .name_ow .auto",
-    durationSeconds: nameDurationSeconds
-  });
+  initAboutAutoNameReveal({ durationSeconds: nameDurationSeconds });
 }
 
 function initSmoothScrollAnchors({
