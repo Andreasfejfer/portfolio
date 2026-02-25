@@ -1,3 +1,9 @@
+:root,
+html,
+body{
+  overflow-x:hidden;
+}
+
 /* Repet layered hover/drag effect */
 .repet {
   position: relative;
