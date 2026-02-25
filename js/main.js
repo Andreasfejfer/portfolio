@@ -51,6 +51,42 @@ const __ABOUT_ENTER_PRIMED = (() => {
   return true;
 })();
 
+const PAGE_ENTER_DURATION_MS = 5000;
+const PAGE_ENTER_OFFSET_PX = 22;
+const PAGE_ENTER_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+
+function animateWrapperEnter({
+  wrapper,
+  durationMs = PAGE_ENTER_DURATION_MS,
+  offsetYpx = PAGE_ENTER_OFFSET_PX,
+  clearDocumentHidden = false
+} = {}) {
+  if (!wrapper) return;
+  if (wrapper.dataset.pageEnterAnimated === "1") return;
+  wrapper.dataset.pageEnterAnimated = "1";
+
+  wrapper.style.transition = "none";
+  wrapper.style.opacity = "0";
+  wrapper.style.transform = `translate3d(0, ${offsetYpx}px, 0)`;
+  wrapper.style.willChange = "opacity, transform";
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (clearDocumentHidden) {
+        document.documentElement.style.visibility = "visible";
+        delete document.documentElement.dataset.enteringAbout;
+        delete document.documentElement.dataset.returningIndex;
+      }
+      wrapper.style.transition = `opacity ${durationMs}ms ${PAGE_ENTER_EASE}, transform ${durationMs}ms ${PAGE_ENTER_EASE}`;
+      wrapper.style.opacity = "1";
+      wrapper.style.transform = "translate3d(0, 0, 0)";
+      setTimeout(() => {
+        wrapper.style.willChange = "auto";
+      }, durationMs + 50);
+    });
+  });
+}
+
 
 function waitForImages(track) {
   const images = Array.from(track.querySelectorAll('img'));
@@ -275,23 +311,15 @@ function isAboutPage() {
   return /(^|\/)about(\/|$)/.test(path);
 }
 
-function initAboutEnterEffects({ fadeDurationMs = 1200, nameDurationSeconds = 3 } = {}) {
+function initAboutEnterEffects({ fadeDurationMs = PAGE_ENTER_DURATION_MS, nameDurationSeconds = 3 } = {}) {
   if (!isAboutPage()) return;
 
   const wrapper = document.querySelector(".page_wrapper");
   if (wrapper) {
-    wrapper.style.transition = "none";
-    wrapper.style.opacity = "0";
-    wrapper.style.willChange = "opacity";
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (__ABOUT_ENTER_PRIMED || document.documentElement.dataset.enteringAbout === "1") {
-          document.documentElement.style.visibility = "visible";
-          delete document.documentElement.dataset.enteringAbout;
-        }
-        wrapper.style.transition = `opacity ${fadeDurationMs}ms ease`;
-        wrapper.style.opacity = "1";
-      });
+    animateWrapperEnter({
+      wrapper,
+      durationMs: fadeDurationMs,
+      clearDocumentHidden: __ABOUT_ENTER_PRIMED || document.documentElement.dataset.enteringAbout === "1"
     });
   } else if (__ABOUT_ENTER_PRIMED || document.documentElement.dataset.enteringAbout === "1") {
     document.documentElement.style.visibility = "visible";
@@ -639,6 +667,9 @@ document.addEventListener("DOMContentLoaded", () => {
   initRevealNames();
   if (onAboutPage) {
     initAboutEnterEffects();
+  } else if (!document.body.classList.contains("page-index")) {
+    const wrapper = document.querySelector(".page_wrapper");
+    animateWrapperEnter({ wrapper, durationMs: PAGE_ENTER_DURATION_MS });
   }
 
   if (document.body.classList.contains("page-home")) {
@@ -665,11 +696,15 @@ document.addEventListener("DOMContentLoaded", () => {
       // Give the browser a moment to settle, then fade in
       setTimeout(() => {
         requestAnimationFrame(() => {
-          document.documentElement.style.visibility = "visible";
-          delete document.documentElement.dataset.returningIndex;
           if (wrapper) {
-            wrapper.style.transition = "opacity 1800ms ease";
-            wrapper.style.opacity = "1";
+            animateWrapperEnter({
+              wrapper,
+              durationMs: PAGE_ENTER_DURATION_MS,
+              clearDocumentHidden: true
+            });
+          } else {
+            document.documentElement.style.visibility = "visible";
+            delete document.documentElement.dataset.returningIndex;
           }
         });
       }, 500);
@@ -677,8 +712,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Normal load: reveal after a tiny delay to avoid flash
       setTimeout(() => {
         requestAnimationFrame(() => {
-          wrapper.style.transition = "opacity 600ms ease";
-          wrapper.style.opacity = "1";
+          animateWrapperEnter({ wrapper, durationMs: PAGE_ENTER_DURATION_MS });
         });
       }, 100);
     }
