@@ -111,7 +111,7 @@ export function initScrollBlurHeadings({ selector = ".h-in" } = {}) {
     if (!ok) return;
 
     document.querySelectorAll(selector).forEach(el => {
-      if (el.classList.contains("name")) return; // skip names to avoid scroll effect
+      if (el.classList.contains("name") || el.classList.contains("name_ow")) return; // skip name variants to avoid scroll effect
       if (el.dataset.hInInit === "1") return;
       const chars = splitIntoChars(el);
       if (!chars.length) return;
@@ -143,7 +143,7 @@ export function initScrollBlurHeadings({ selector = ".h-in" } = {}) {
 }
 
 export function initRevealNames({
-  selector = ".name, .sc1",
+  selector = ".name, .name_ow, .sc1",
   durationSeconds = 3,
   stagger = 0.05,
   minDurationSeconds = 3
@@ -167,7 +167,8 @@ export function initRevealNames({
 
       el.dataset.nameInit = "1";
 
-      const isLightBg = el.classList.contains("name-light") || el.dataset.nameTheme === "light";
+      const isNameOw = el.classList.contains("name_ow");
+      const isLightBg = isNameOw || el.classList.contains("name-light") || el.dataset.nameTheme === "light";
       const fromState = { filter: START_FILTER, willChange: "filter" };
       const toState = {
         ease: "none",
@@ -181,7 +182,13 @@ export function initRevealNames({
         }
       };
 
-      if (isLightBg) {
+      if (isNameOw) {
+        // White-background variant: opacity + blur reveal avoids brightness(0%) black-on-black behavior.
+        fromState.filter = "blur(10px)";
+        toState.filter = "blur(0px)";
+        fromState.opacity = 0;
+        toState.opacity = 1;
+      } else if (isLightBg) {
         fromState.opacity = 0;
         toState.opacity = 1;
       }
