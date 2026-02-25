@@ -261,8 +261,8 @@ function initAboutAutoNameReveal({ selector = ".name_ow, .name_ow.auto, .name_ow
 
 function isAboutPage() {
   if (document.body.classList.contains("page-about")) return true;
-  const path = (window.location.pathname || "").replace(/\/+$/, "");
-  return path === "/about" || path.endsWith("/about");
+  const path = (window.location.pathname || "").toLowerCase();
+  return /(^|\/)about(\/|$)/.test(path);
 }
 
 function initAboutEnterEffects({ fadeDurationMs = 1200, nameDurationSeconds = 3 } = {}) {
@@ -609,6 +609,8 @@ function initHeaderOnBlackBox() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  const onAboutPage = isAboutPage();
+
   initPageFade();
   initSmoothScrollAnchors();
   initPrefetchNext();
@@ -616,8 +618,12 @@ document.addEventListener("DOMContentLoaded", () => {
   initRepet();
   initBackground();
   initScrollBlurHeadings();
-  initRevealNames();
-  initAboutEnterEffects();
+  if (onAboutPage) {
+    initRevealNames({ selector: ".name, .sc1" });
+    initAboutEnterEffects();
+  } else {
+    initRevealNames();
+  }
 
   if (document.body.classList.contains("page-home")) {
     initHomePage();
