@@ -750,7 +750,7 @@ function initProjectOverlayExperience({
   titleTargetX = 0.3,
   titleTargetY = 0.4,
   closeTargetX = 0.25,
-  closeTargetY = 0.5
+  closeTargetY = 0.4
 } = {}) {
   const wrapper = document.querySelector(wrapperSelector);
   const overlayRoot = document.querySelector(overlayRootSelector);
@@ -883,7 +883,7 @@ function initProjectOverlayExperience({
         return true;
       }
 
-      const topOffset = window.innerHeight * 0.5;
+      const topOffset = window.innerHeight * titleTargetY;
       const titleAbsoluteTop = title.getBoundingClientRect().top + window.scrollY;
       const targetScrollY = Math.max(0, titleAbsoluteTop - topOffset);
 

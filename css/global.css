@@ -215,10 +215,14 @@ html.preloader-active .scramble-text{visibility:hidden}
    ========================= */
 
 /* Overlay root: present in DOM but inactive by default */
+.root,
 [data-overlay-root] {
   position: fixed;
   inset: 0;
+  width: 100vw;
+  height: 100dvh;
   z-index: 9999;
+  overflow: hidden;
   opacity: 0;
   pointer-events: none;
   transition: opacity 300ms ease;
@@ -231,10 +235,14 @@ html.preloader-active .scramble-text{visibility:hidden}
 }
 
 /* Every panel fills viewport */
+.sim4people,
 [data-overlay-panel] {
   position: absolute;
   inset: 0;
-  overflow: auto;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   opacity: 0;
   transform: translateY(12px);
