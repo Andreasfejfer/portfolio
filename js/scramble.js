@@ -8,6 +8,15 @@ export function initScramble() {
 
   const randSymbol = () => LETTERS_AND_SYMBOLS[Math.floor(Math.random() * LETTERS_AND_SYMBOLS.length)];
   const hasGsap = () => (typeof window !== "undefined" && typeof window.gsap !== "undefined");
+  const scrollState = {
+    bound: false,
+    ticking: false,
+    scrollEls: [],
+    footerContainer: null,
+    footerScrollEls: [],
+    footerTriggered: false,
+    prevTops: new WeakMap()
+  };
 
   const hideScramble = (el) => {
     el.classList.remove('scramble-visible');
@@ -25,6 +34,54 @@ export function initScramble() {
     const ms = parseInt(v, 10);
     return Number.isFinite(ms) ? ms : fallback;
   };
+
+  function triggerScramble(el) {
+    el.dataset.scrambleScrollDone = '1';
+    el.dataset.scrambleScrollVisible = '1';
+    const trigger = el.__scrambleTrigger;
+    if (typeof trigger === "function") {
+      trigger();
+    }
+  }
+
+  function triggerFooterGroupIfNeeded() {
+    if (scrollState.footerTriggered || !scrollState.footerContainer || !scrollState.footerScrollEls.length) return;
+    const rect = scrollState.footerContainer.getBoundingClientRect();
+    const offsetTrigger = window.innerHeight * 0.8; // 20% offset from bottom
+    if (rect.top <= offsetTrigger && rect.bottom >= 0) {
+      scrollState.footerTriggered = true;
+      scrollState.footerScrollEls.forEach(triggerScramble);
+    }
+  }
+
+  function checkScrambleScroll() {
+    scrollState.ticking = false;
+    triggerFooterGroupIfNeeded();
+    scrollState.scrollEls.forEach(el => {
+      if (el.dataset.scrambleScrollDone) return;
+      const percent = parseFloat(el.getAttribute('data-scramble-offset')) || 70;
+      const rect = el.getBoundingClientRect();
+      const triggerPoint = window.innerHeight * (percent / 100);
+      const prevTop = scrollState.prevTops.get(el);
+      if (prevTop === undefined && rect.top <= triggerPoint && rect.bottom > 0) {
+        triggerScramble(el);
+      } else if (
+        prevTop !== undefined &&
+        prevTop > triggerPoint &&
+        rect.top <= triggerPoint &&
+        rect.bottom > 0
+      ) {
+        triggerScramble(el);
+      }
+      scrollState.prevTops.set(el, rect.top);
+    });
+  }
+
+  function requestScrambleScrollCheck() {
+    if (scrollState.ticking) return;
+    scrollState.ticking = true;
+    requestAnimationFrame(checkScrambleScroll);
+  }
 
   function initOne(el){
     if (el.dataset.scrambleInit === "1") return;
@@ -356,57 +413,20 @@ export function initScramble() {
     const footerEl = document.querySelector('.footer');
     const footerInfoEl = footerEl ? footerEl.querySelector('.footer-info') : null;
     const footerContainer = footerInfoEl || footerEl;
-    const footerScrollEls = footerContainer ? scrollEls.filter(el => footerContainer.contains(el)) : [];
-    let footerTriggered = false;
+    scrollState.scrollEls = scrollEls;
+    scrollState.footerContainer = footerContainer;
+    scrollState.footerScrollEls = footerContainer ? scrollEls.filter(el => footerContainer.contains(el)) : [];
+    scrollState.footerTriggered = false;
+    scrollState.prevTops = new WeakMap();
 
-    // Track previous top for each element
-    const prevTops = new WeakMap();
-    function triggerScramble(el) {
-      el.dataset.scrambleScrollDone = '1';
-      el.dataset.scrambleScrollVisible = '1';
-      const trigger = el.__scrambleTrigger;
-      if (typeof trigger === "function") {
-        trigger();
-      }
+    if (!scrollState.bound) {
+      window.addEventListener('scroll', requestScrambleScrollCheck, { passive: true });
+      window.addEventListener('resize', requestScrambleScrollCheck);
+      scrollState.bound = true;
     }
 
-    function triggerFooterGroupIfNeeded() {
-      if (footerTriggered || !footerContainer || !footerScrollEls.length) return;
-      const rect = footerContainer.getBoundingClientRect();
-      const offsetTrigger = window.innerHeight * 0.8; // 20% offset from bottom
-      if (rect.top <= offsetTrigger && rect.bottom >= 0) {
-        footerTriggered = true;
-        footerScrollEls.forEach(triggerScramble);
-      }
-    }
-
-    function checkScrambleScroll() {
-      triggerFooterGroupIfNeeded();
-      scrollEls.forEach(el => {
-        if (el.dataset.scrambleScrollDone) return;
-        const percent = parseFloat(el.getAttribute('data-scramble-offset')) || 70;
-        const rect = el.getBoundingClientRect();
-        const triggerPoint = window.innerHeight * (percent / 100);
-        const prevTop = prevTops.get(el);
-        if (prevTop === undefined && rect.top <= triggerPoint && rect.bottom > 0) {
-          triggerScramble(el);
-        }
-        else if (
-          prevTop !== undefined &&
-          prevTop > triggerPoint &&
-          rect.top <= triggerPoint &&
-          rect.bottom > 0
-        ) {
-          triggerScramble(el);
-        }
-        prevTops.set(el, rect.top);
-      });
-    }
-
-    window.addEventListener('scroll', checkScrambleScroll, { passive: true });
-    window.addEventListener('resize', checkScrambleScroll);
     // Initial check in case already in view
-    setTimeout(checkScrambleScroll, 10);
+    setTimeout(requestScrambleScrollCheck, 10);
   }
 
   const start = () => {

@@ -7,14 +7,20 @@ export function initPreloader() {
   const PRE_TEXT_SELECTOR  = ".scramble-text-preloader";
   const PRELOADER_KEY      = "preloader_shown_session";
 
+  const isLikelyMobile = !!(
+    (window.matchMedia && window.matchMedia("(max-width: 991px)").matches) ||
+    (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0)
+  );
+
   // timing
   const PRE_START_DELAY_MS = 500;
-  const PRE_MIN_TOTAL_MS   = 4000;
+  const PRE_MIN_TOTAL_MS   = isLikelyMobile ? 5200 : 4600;
+  const PRE_MAX_ASSET_WAIT_MS = isLikelyMobile ? 9000 : 6500;
   const PRE_HOLD_END_MS    = 250;
   const PRE_FADE_OUT_MS    = 1350; // match CSS
 
   // preloader text behavior
-  const PRE_LOOP_COUNT     = 2;
+  const PRE_LOOP_COUNT     = isLikelyMobile ? 1 : 2;
   const PRE_LOOP_PAUSE_MS  = 600;
 
   const PRE_SPEED_REVEAL   = 240;
@@ -190,7 +196,7 @@ export function initPreloader() {
     let completed = 0;
 
     state.animatable.forEach((span, i) => {
-      const flashes = 1 + Math.floor(Math.random() * 2);
+      const flashes = isLikelyMobile ? 1 : (1 + Math.floor(Math.random() * 2));
       const start = i * baseStagger;
 
       for (let f=0; f<flashes; f++){
@@ -284,8 +290,86 @@ export function initPreloader() {
   const preState = buildPreText(preTexts[0]);
   const preStartedAt = performance.now();
   const preMinEndAt = preStartedAt + PRE_MIN_TOTAL_MS;
+  let preFinished = false;
+
+  const waitForLoadEvent = () => {
+    if (document.readyState === "complete") return Promise.resolve();
+    return new Promise(resolve => {
+      window.addEventListener("load", resolve, { once: true });
+    });
+  };
+
+  const waitForFonts = () => {
+    const fonts = document.fonts;
+    if (!fonts || !fonts.ready) return Promise.resolve();
+    return Promise.race([
+      fonts.ready.catch(() => {}),
+      new Promise(resolve => setTimeout(resolve, 2000))
+    ]);
+  };
+
+  const waitForImages = (root) => {
+    const imgs = Array.from(root.querySelectorAll("img"));
+    if (!imgs.length) return Promise.resolve();
+
+    return Promise.all(
+      imgs.map((img) => {
+        if (img.complete && img.naturalWidth > 0) {
+          if (typeof img.decode === "function") {
+            return img.decode().catch(() => {});
+          }
+          return Promise.resolve();
+        }
+        return new Promise((resolve) => {
+          const done = () => {
+            if (typeof img.decode === "function") {
+              img.decode().catch(() => {}).finally(resolve);
+            } else {
+              resolve();
+            }
+          };
+          img.addEventListener("load", done, { once: true });
+          img.addEventListener("error", resolve, { once: true });
+        });
+      })
+    );
+  };
+
+  const waitForVideos = (root) => {
+    const videos = Array.from(root.querySelectorAll("video"));
+    if (!videos.length) return Promise.resolve();
+
+    return Promise.all(
+      videos.map((video) => {
+        if (video.readyState >= 2) return Promise.resolve();
+        return new Promise((resolve) => {
+          video.addEventListener("loadeddata", resolve, { once: true });
+          video.addEventListener("canplay", resolve, { once: true });
+          video.addEventListener("error", resolve, { once: true });
+        });
+      })
+    );
+  };
+
+  const waitForCriticalAssets = () => {
+    const root = document.querySelector(".page-home")
+      ? document
+      : (document.querySelector(".page_wrapper") || document);
+
+    return Promise.race([
+      Promise.all([
+        waitForLoadEvent(),
+        waitForFonts(),
+        waitForImages(root),
+        waitForVideos(root)
+      ]),
+      new Promise(resolve => setTimeout(resolve, PRE_MAX_ASSET_WAIT_MS))
+    ]);
+  };
 
   function preFinishAfterMinAndLoaded() {
+    if (preFinished) return;
+    preFinished = true;
     const wait = Math.max(0, preMinEndAt - performance.now());
     setTimeout(() => {
       setTimeout(() => {
@@ -304,8 +388,8 @@ export function initPreloader() {
     }, wait);
   }
 
-  // Wait for full page load only
-  window.addEventListener('load', () => {
+  // Wait for load + critical media (with max cap)
+  waitForCriticalAssets().then(() => {
     setTimeout(() => {
       if (!preState){
         preFinishAfterMinAndLoaded();
