@@ -943,6 +943,22 @@ function initProjectOverlayExperience({
     return null;
   };
 
+  const resolveTargetLeftPx = (el) => {
+    if (!el) return null;
+    const styles = getComputedStyle(el);
+    const parentRect = el.offsetParent && el.offsetParent.getBoundingClientRect
+      ? el.offsetParent.getBoundingClientRect()
+      : { left: 0 };
+    const left = parseFloat(styles.left) || 0;
+    const marginLeft = parseFloat(styles.marginLeft) || 0;
+    const borderLeft = parseFloat(styles.borderLeftWidth) || 0;
+    const paddingLeft = parseFloat(styles.paddingLeft) || 0;
+
+    const computed = parentRect.left + left + marginLeft + borderLeft + paddingLeft;
+    const fallback = el.getBoundingClientRect().left;
+    return Number.isFinite(computed) ? computed : fallback;
+  };
+
   const getActivePanel = () => {
     if (!activeOverlayRoute) return null;
     return overlayRoot.querySelector(`[data-overlay-panel="${activeOverlayRoute}"]`);
@@ -1044,8 +1060,9 @@ function initProjectOverlayExperience({
       }
 
       const sourceRect = source ? source.getBoundingClientRect() : null;
+      const sourceLeftPx = source ? resolveTargetLeftPx(source) : null;
       const target = sourceRect
-        ? { left: sourceRect.left, top: desiredTop }
+        ? { left: Number.isFinite(sourceLeftPx) ? sourceLeftPx : sourceRect.left, top: desiredTop }
         : (floatingReturnRect || {
             left: window.innerWidth * closeTargetX,
             top: window.innerHeight * closeTargetY
