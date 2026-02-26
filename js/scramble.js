@@ -89,9 +89,15 @@ export function initScramble() {
   function initOne(el){
     if (el.dataset.scrambleInit === "1") return;
     el.dataset.scrambleInit = "1";
-    const isScrollScramble = el.classList.contains('scramble-scroll');
     const isLoop = el.classList.contains('scramble-loop');
-    const isAutoLoop = el.classList.contains('scramble-autoloop');
+    const isAutoLoop = (
+      el.classList.contains('scramble-autoloop') ||
+      el.classList.contains('scramble-auto-loop') ||
+      el.classList.contains('Awrite--loop') ||
+      el.classList.contains('awrite--loop') ||
+      el.dataset.scrambleAutoloop === "1"
+    );
+    const isScrollScramble = el.classList.contains('scramble-scroll') && !isAutoLoop;
 
     if (el.classList.contains('scramble-black')) {
       el.classList.add('scramble-color-black');
