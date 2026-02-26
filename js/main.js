@@ -289,6 +289,22 @@ function initLenisSmoothScroll() {
     window.__LENIS_INIT = true;
     window.__LENIS_INSTANCE = lenis;
 
+    const syncLenisWithOverlayState = () => {
+      const overlayOpen =
+        document.documentElement.classList.contains("overlay-open") ||
+        document.body.classList.contains("overlay-open");
+      if (overlayOpen) {
+        lenis.stop();
+      } else {
+        lenis.start();
+      }
+    };
+
+    const observer = new MutationObserver(syncLenisWithOverlayState);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    syncLenisWithOverlayState();
+
     lenis.on("scroll", () => {
       if (typeof window.ScrollTrigger !== "undefined" && typeof window.ScrollTrigger.update === "function") {
         window.ScrollTrigger.update();

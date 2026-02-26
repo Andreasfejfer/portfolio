@@ -266,4 +266,6 @@ html.preloader-active .scramble-text{visibility:hidden}
 html.overlay-open,
 body.overlay-open {
   overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
 }
