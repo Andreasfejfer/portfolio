@@ -1085,12 +1085,20 @@ function initProjectOverlayExperience({
         setLenisLocked("overlay-router", true);
         const panel = getActivePanel();
         if (panel) {
+          panel.setAttribute("data-lenis-prevent", "");
+          panel.setAttribute("data-lenis-prevent-wheel", "");
+          panel.setAttribute("data-lenis-prevent-touch", "");
           panel.scrollTop = 0;
           panel.scrollLeft = 0;
         }
         bindFloatingTitleToPanelScroll(route);
         return;
       }
+      overlayRoot.querySelectorAll("[data-overlay-panel]").forEach(panel => {
+        panel.removeAttribute("data-lenis-prevent");
+        panel.removeAttribute("data-lenis-prevent-wheel");
+        panel.removeAttribute("data-lenis-prevent-touch");
+      });
       setLenisLocked("overlay-router", false);
       setContentFaded(false);
       handoffFloatingTitleAfterFadeIn();
