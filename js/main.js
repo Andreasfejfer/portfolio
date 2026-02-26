@@ -764,6 +764,7 @@ function initProjectOverlayExperience({
   let floatingSource = null;
   let floatingReturnRect = null;
   let transitionInFlight = false;
+  let activeOverlayRoute = null;
 
   const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -871,6 +872,25 @@ function initProjectOverlayExperience({
     return null;
   };
 
+  const getActivePanel = () => {
+    if (!activeOverlayRoute) return null;
+    return overlayRoot.querySelector(`[data-overlay-panel="${activeOverlayRoute}"]`);
+  };
+
+  overlayRoot.addEventListener(
+    "wheel",
+    (event) => {
+      const panel = getActivePanel();
+      if (!panel) return;
+      if (!panel.contains(event.target)) return;
+
+      event.preventDefault();
+      panel.scrollTop += event.deltaY;
+      panel.scrollLeft += event.deltaX;
+    },
+    { passive: false }
+  );
+
   return initOverlayRouter({
     beforeOpen: async ({ trigger }) => {
       if (transitionInFlight) return false;
@@ -949,6 +969,7 @@ function initProjectOverlayExperience({
       return true;
     },
     onRouteChange: (route) => {
+      activeOverlayRoute = route || null;
       if (route) {
         setLenisLocked("overlay-router", true);
         moveFloatingTitleToPanel(route);
