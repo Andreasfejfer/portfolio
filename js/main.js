@@ -744,7 +744,7 @@ function initProjectOverlayExperience({
   overlayRootSelector = "[data-overlay-root]",
   titleSelector = ".project_name",
   projectSelector = ".marquee_project",
-  fadeDurationMs = 600,
+  fadeDurationMs = 900,
   scrollDurationMs = 900,
   floatDurationMs = 900,
   titleTargetX = 0.3,
@@ -759,7 +759,11 @@ function initProjectOverlayExperience({
     return initOverlayRouter();
   }
 
-  const fadeTargets = Array.from(wrapper.children).filter(child => child !== overlayRoot);
+  const fadeTargets = Array.from(wrapper.children).filter(child => {
+    if (child === overlayRoot) return false;
+    if (child.matches("header, .header, [data-overlay-keep='1']")) return false;
+    return true;
+  });
   let floatingTitle = null;
   let floatingSource = null;
   let floatingReturnRect = null;
@@ -768,9 +772,9 @@ function initProjectOverlayExperience({
 
   const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const smoothScrollTo = (y, durationMs) => {
+  const smoothScrollTo = (y, durationMs, { preferNative = false } = {}) => {
     const lenis = window.__LENIS_INSTANCE;
-    if (lenis && typeof lenis.scrollTo === "function") {
+    if (!preferNative && lenis && typeof lenis.scrollTo === "function") {
       return new Promise(resolve => {
         lenis.scrollTo(y, {
           duration: Math.max(0, durationMs) / 1000,
@@ -910,10 +914,7 @@ function initProjectOverlayExperience({
       await smoothScrollTo(targetScrollY, scrollDurationMs);
 
       const rect = title.getBoundingClientRect();
-      floatingReturnRect = {
-        left: rect.left,
-        top: rect.top
-      };
+      floatingReturnRect = { left: rect.left, top: rect.top };
       const clone = title.cloneNode(true);
       Object.assign(clone.style, {
         position: "fixed",
@@ -937,7 +938,7 @@ function initProjectOverlayExperience({
           clone,
           {
             left: window.innerWidth * titleTargetX,
-            top: window.innerHeight * titleTargetY
+            top: rect.top
           },
           floatDurationMs
         ),
@@ -953,17 +954,27 @@ function initProjectOverlayExperience({
 
       moveFloatingTitleToBodyFixed();
 
-      const target = floatingReturnRect || {
-        left: window.innerWidth * closeTargetX,
-        top: window.innerHeight * closeTargetY
-      };
+      const source = floatingSource;
+      if (source) {
+        const desiredTop = floatingTitle
+          ? floatingTitle.getBoundingClientRect().top
+          : window.innerHeight * closeTargetY;
+        const sourceAbsoluteTop = source.getBoundingClientRect().top + window.scrollY;
+        const targetScrollY = Math.max(0, sourceAbsoluteTop - desiredTop);
+        await smoothScrollTo(targetScrollY, scrollDurationMs, { preferNative: true });
+      }
+
+      const sourceRect = source ? source.getBoundingClientRect() : null;
+      const target = sourceRect
+        ? { left: sourceRect.left, top: floatingTitle ? floatingTitle.getBoundingClientRect().top : sourceRect.top }
+        : (floatingReturnRect || {
+            left: window.innerWidth * closeTargetX,
+            top: window.innerHeight * closeTargetY
+          });
 
       if (floatingTitle) {
         await animateCloneTo(floatingTitle, target, floatDurationMs);
       }
-
-      setContentFaded(false);
-      await wait(fadeDurationMs);
 
       transitionInFlight = false;
       return true;
