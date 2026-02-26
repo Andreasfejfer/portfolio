@@ -878,14 +878,18 @@ function initProjectOverlayExperience({
 
     if (!immediate && floatingTitle) {
       if (floatingSource) {
-        floatingSource.style.transition = "opacity 120ms linear";
+        floatingSource.style.transition = "none";
         floatingSource.style.opacity = "1";
       }
-      floatingTitle.style.transition = "opacity 120ms linear";
-      floatingTitle.style.opacity = "0";
+      floatingTitle.style.transition = "none";
+      floatingTitle.style.opacity = "1";
       floatingClearTimer = setTimeout(() => {
-        clearFloatingTitle({ immediate: true });
-      }, 130);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            clearFloatingTitle({ immediate: true });
+          });
+        });
+      }, 80);
       return;
     }
 

@@ -4,6 +4,10 @@ body{
   overflow-x:hidden;
 }
 
+html{
+  scrollbar-gutter: stable both-edges;
+}
+
 /* Repet layered hover/drag effect */
 .repet {
   position: relative;
