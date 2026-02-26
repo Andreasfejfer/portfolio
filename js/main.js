@@ -877,6 +877,10 @@ function initProjectOverlayExperience({
     }
 
     if (!immediate && floatingTitle) {
+      if (floatingSource) {
+        floatingSource.style.transition = "opacity 120ms linear";
+        floatingSource.style.opacity = "1";
+      }
       floatingTitle.style.transition = "opacity 120ms linear";
       floatingTitle.style.opacity = "0";
       floatingClearTimer = setTimeout(() => {
@@ -896,7 +900,8 @@ function initProjectOverlayExperience({
     }
     floatingTitle = null;
     if (floatingSource) {
-      floatingSource.style.visibility = "";
+      floatingSource.style.opacity = "";
+      floatingSource.style.transition = "";
     }
     floatingSource = null;
     floatingReturnRect = null;
@@ -986,7 +991,8 @@ function initProjectOverlayExperience({
         transform: "translateZ(0)"
       });
 
-      title.style.visibility = "hidden";
+      title.style.opacity = "0";
+      title.style.transition = "none";
       floatingTitle = clone;
       floatingSource = title;
       document.body.appendChild(clone);
