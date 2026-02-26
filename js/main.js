@@ -759,6 +759,11 @@ function initProjectOverlayExperience({
     return initOverlayRouter();
   }
 
+  // Keep overlay independent from wrapper transforms/enter animations.
+  if (overlayRoot.parentNode !== document.body) {
+    document.body.appendChild(overlayRoot);
+  }
+
   const fadeTargets = Array.from(wrapper.children).filter(child => {
     if (child === overlayRoot) return false;
     if (child.matches("header, .header, [data-overlay-keep='1']")) return false;
@@ -962,11 +967,6 @@ function initProjectOverlayExperience({
         await smoothScrollTo(targetScrollY, scrollDurationMs, { preferNative: true });
       }
 
-      if (floatingTitle) {
-        floatingTitle.style.transition = "none";
-        floatingTitle.style.top = `${desiredTop}px`;
-      }
-
       const sourceRect = source ? source.getBoundingClientRect() : null;
       const target = sourceRect
         ? { left: sourceRect.left, top: desiredTop }
@@ -986,6 +986,11 @@ function initProjectOverlayExperience({
       activeOverlayRoute = route || null;
       if (route) {
         setLenisLocked("overlay-router", true);
+        const panel = getActivePanel();
+        if (panel) {
+          panel.scrollTop = 0;
+          panel.scrollLeft = 0;
+        }
         moveFloatingTitleToPanel(route);
         return;
       }

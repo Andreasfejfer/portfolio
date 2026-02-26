@@ -281,7 +281,3 @@ body.overlay-open {
   overflow: hidden;
   overscroll-behavior: none;
 }
-
-html.overlay-open .page_wrapper {
-  transform: none !important;
-}
