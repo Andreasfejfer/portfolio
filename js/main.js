@@ -777,6 +777,7 @@ function initProjectOverlayExperience({
   let floatingScrollPanel = null;
   let floatingScrollBaseTop = 0;
   let floatingScrollHandler = null;
+  let floatingClearTimer = null;
 
   const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -869,7 +870,21 @@ function initProjectOverlayExperience({
     });
   };
 
-  const clearFloatingTitle = () => {
+  const clearFloatingTitle = ({ immediate = true } = {}) => {
+    if (floatingClearTimer) {
+      clearTimeout(floatingClearTimer);
+      floatingClearTimer = null;
+    }
+
+    if (!immediate && floatingTitle) {
+      floatingTitle.style.transition = "opacity 120ms linear";
+      floatingTitle.style.opacity = "0";
+      floatingClearTimer = setTimeout(() => {
+        clearFloatingTitle({ immediate: true });
+      }, 130);
+      return;
+    }
+
     if (floatingScrollPanel && floatingScrollHandler) {
       floatingScrollPanel.removeEventListener("scroll", floatingScrollHandler);
     }
@@ -1049,7 +1064,7 @@ function initProjectOverlayExperience({
       }
       setLenisLocked("overlay-router", false);
       setContentFaded(false);
-      clearFloatingTitle();
+      clearFloatingTitle({ immediate: false });
     }
   });
 }
