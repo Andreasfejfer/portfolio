@@ -13,7 +13,7 @@ export function initPreloader() {
   );
 
   // timing
-  const PRE_START_DELAY_MS = 500;
+  const PRE_START_DELAY_MS = 0;
   const PRE_MIN_TOTAL_MS   = isLikelyMobile ? 5200 : 4600;
   const PRE_MAX_ASSET_WAIT_MS = isLikelyMobile ? 9000 : 6500;
   const PRE_HOLD_END_MS    = 250;
@@ -120,6 +120,7 @@ export function initPreloader() {
 
   // timer mgmt
   let preTimers = [];
+  let preLoopDelayTimer = null;
   const preLater = (fn, ms) => {
     const t = setTimeout(fn, ms);
     preTimers.push(t);
@@ -128,6 +129,11 @@ export function initPreloader() {
   const preClearTimers = () => {
     preTimers.forEach(t => clearTimeout(t));
     preTimers = [];
+  };
+  const preClearLoopDelay = () => {
+    if (!preLoopDelayTimer) return;
+    clearTimeout(preLoopDelayTimer);
+    preLoopDelayTimer = null;
   };
 
   // Reveal: hidden -> visible
@@ -291,6 +297,7 @@ export function initPreloader() {
   const preStartedAt = performance.now();
   const preMinEndAt = preStartedAt + PRE_MIN_TOTAL_MS;
   let preFinished = false;
+  let preWantsFinish = false;
 
   const waitForLoadEvent = () => {
     if (document.readyState === "complete") return Promise.resolve();
@@ -370,6 +377,8 @@ export function initPreloader() {
   function preFinishAfterMinAndLoaded() {
     if (preFinished) return;
     preFinished = true;
+    preClearTimers();
+    preClearLoopDelay();
     const wait = Math.max(0, preMinEndAt - performance.now());
     setTimeout(() => {
       setTimeout(() => {
@@ -388,38 +397,70 @@ export function initPreloader() {
     }, wait);
   }
 
-  // Wait for load + critical media (with max cap)
-  waitForCriticalAssets().then(() => {
-    setTimeout(() => {
-      if (!preState){
+  const runPreloaderLoop = () => {
+    if (!preState || preFinished) {
+      preFinishAfterMinAndLoaded();
+      return;
+    }
+
+    if (preWantsFinish) {
+      preReverse(preState, PRE_SPEED_REVERSE, () => {
         preFinishAfterMinAndLoaded();
-        return;
-      }
+      });
+      return;
+    }
 
-      // Force reflow to ensure layout is stable before animation
-      document.body.offsetHeight;
+    preLoopOnce(preState, PRE_SPEED_LOOP, () => {
+      if (preFinished) return;
+      preClearLoopDelay();
+      preLoopDelayTimer = setTimeout(runPreloaderLoop, PRE_LOOP_PAUSE_MS);
+    });
+  };
 
+  const startPreloaderAnimation = () => {
+    if (!preState) return;
+
+    // Force reflow to ensure layout is stable before animation
+    document.body.offsetHeight;
+
+    setTimeout(() => {
       preReveal(preState, PRE_SPEED_REVEAL, () => {
         let loopsDone = 0;
-
-        const runLoop = () => {
+        const runInitialLoops = () => {
+          if (preFinished) return;
+          if (preWantsFinish) {
+            runPreloaderLoop();
+            return;
+          }
           preLoopOnce(preState, PRE_SPEED_LOOP, () => {
             loopsDone++;
-            if (loopsDone < PRE_LOOP_COUNT){
-              setTimeout(runLoop, PRE_LOOP_PAUSE_MS);
+            if (loopsDone < PRE_LOOP_COUNT) {
+              preClearLoopDelay();
+              preLoopDelayTimer = setTimeout(runInitialLoops, PRE_LOOP_PAUSE_MS);
             } else {
-              setTimeout(() => {
-                preReverse(preState, PRE_SPEED_REVERSE, () => {
-                  preFinishAfterMinAndLoaded();
-                });
-              }, PRE_LOOP_PAUSE_MS);
+              preClearLoopDelay();
+              preLoopDelayTimer = setTimeout(runPreloaderLoop, PRE_LOOP_PAUSE_MS);
             }
           });
         };
-
-        setTimeout(runLoop, PRE_LOOP_PAUSE_MS);
+        preClearLoopDelay();
+        preLoopDelayTimer = setTimeout(runInitialLoops, PRE_LOOP_PAUSE_MS);
       });
     }, PRE_START_DELAY_MS);
+  };
+
+  const waitForMinTime = () => new Promise(resolve => {
+    const wait = Math.max(0, preMinEndAt - performance.now());
+    setTimeout(resolve, wait);
+  });
+
+  // Start animation immediately; finish only after both min time + critical assets.
+  startPreloaderAnimation();
+  Promise.all([waitForCriticalAssets(), waitForMinTime()]).then(() => {
+    preWantsFinish = true;
+    if (!preState) {
+      preFinishAfterMinAndLoaded();
+    }
   });
 }
 
