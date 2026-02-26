@@ -774,6 +774,9 @@ function initProjectOverlayExperience({
   let floatingReturnRect = null;
   let transitionInFlight = false;
   let activeOverlayRoute = null;
+  let floatingScrollPanel = null;
+  let floatingScrollBaseTop = 0;
+  let floatingScrollHandler = null;
 
   const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -867,6 +870,12 @@ function initProjectOverlayExperience({
   };
 
   const clearFloatingTitle = () => {
+    if (floatingScrollPanel && floatingScrollHandler) {
+      floatingScrollPanel.removeEventListener("scroll", floatingScrollHandler);
+    }
+    floatingScrollPanel = null;
+    floatingScrollHandler = null;
+
     if (floatingTitle && floatingTitle.parentNode) {
       floatingTitle.parentNode.removeChild(floatingTitle);
     }
@@ -878,31 +887,27 @@ function initProjectOverlayExperience({
     floatingReturnRect = null;
   };
 
-  const moveFloatingTitleToPanel = (route) => {
+  const bindFloatingTitleToPanelScroll = (route) => {
     if (!floatingTitle || !route) return;
     const panel = overlayRoot.querySelector(`[data-overlay-panel="${route}"]`);
     if (!panel) return;
 
-    const titleRect = floatingTitle.getBoundingClientRect();
-    const panelRect = panel.getBoundingClientRect();
-    const topInPanel = panel.scrollTop + (titleRect.top - panelRect.top);
-    const leftInPanel = panel.scrollLeft + (titleRect.left - panelRect.left);
+    if (floatingScrollPanel && floatingScrollHandler) {
+      floatingScrollPanel.removeEventListener("scroll", floatingScrollHandler);
+    }
 
-    floatingTitle.style.transition = "none";
-    floatingTitle.style.position = "absolute";
-    floatingTitle.style.top = `${topInPanel}px`;
-    floatingTitle.style.left = `${leftInPanel}px`;
-    panel.appendChild(floatingTitle);
-  };
-
-  const moveFloatingTitleToBodyFixed = () => {
-    if (!floatingTitle || floatingTitle.parentNode === document.body) return;
-    const rect = floatingTitle.getBoundingClientRect();
-    document.body.appendChild(floatingTitle);
+    floatingScrollPanel = panel;
+    floatingScrollBaseTop = floatingTitle.getBoundingClientRect().top + panel.scrollTop;
     floatingTitle.style.transition = "none";
     floatingTitle.style.position = "fixed";
-    floatingTitle.style.top = `${rect.top}px`;
-    floatingTitle.style.left = `${rect.left}px`;
+    floatingTitle.style.zIndex = "10050";
+
+    floatingScrollHandler = () => {
+      if (!floatingTitle || !floatingScrollPanel) return;
+      floatingTitle.style.top = `${floatingScrollBaseTop - floatingScrollPanel.scrollTop}px`;
+    };
+    panel.addEventListener("scroll", floatingScrollHandler, { passive: true });
+    floatingScrollHandler();
   };
 
   const findProjectTitle = (trigger) => {
@@ -959,9 +964,11 @@ function initProjectOverlayExperience({
         left: `${rect.left}px`,
         top: `${rect.top}px`,
         margin: "0",
-        zIndex: "10020",
+        zIndex: "10050",
         pointerEvents: "none",
-        whiteSpace: "nowrap"
+        whiteSpace: "nowrap",
+        backfaceVisibility: "hidden",
+        transform: "translateZ(0)"
       });
 
       title.style.visibility = "hidden";
@@ -995,7 +1002,11 @@ function initProjectOverlayExperience({
         await smoothPanelScrollTo(panel, 0, scrollDurationMs);
       }
 
-      moveFloatingTitleToBodyFixed();
+      if (floatingScrollPanel && floatingScrollHandler) {
+        floatingScrollPanel.removeEventListener("scroll", floatingScrollHandler);
+      }
+      floatingScrollPanel = null;
+      floatingScrollHandler = null;
 
       const source = floatingSource;
       const desiredTop = floatingTitle
@@ -1033,7 +1044,7 @@ function initProjectOverlayExperience({
           panel.scrollTop = 0;
           panel.scrollLeft = 0;
         }
-        moveFloatingTitleToPanel(route);
+        bindFloatingTitleToPanelScroll(route);
         return;
       }
       setLenisLocked("overlay-router", false);
