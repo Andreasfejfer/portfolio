@@ -825,6 +825,39 @@ function initProjectOverlayExperience({
     });
   };
 
+  const animateCloneXTo = (el, left, durationMs) => {
+    if (!el) return Promise.resolve();
+    return new Promise(resolve => {
+      el.style.transition = `left ${durationMs}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+      requestAnimationFrame(() => {
+        el.style.left = `${left}px`;
+      });
+      setTimeout(resolve, durationMs + 30);
+    });
+  };
+
+  const smoothPanelScrollTo = (panel, targetTop, durationMs) => {
+    if (!panel) return Promise.resolve();
+    const start = panel.scrollTop;
+    const dist = targetTop - start;
+    if (Math.abs(dist) < 1 || durationMs <= 0) {
+      panel.scrollTop = targetTop;
+      return Promise.resolve();
+    }
+
+    const startTime = performance.now();
+    return new Promise(resolve => {
+      const step = (now) => {
+        const t = Math.min(1, (now - startTime) / durationMs);
+        const eased = -(Math.cos(Math.PI * t) - 1) / 2;
+        panel.scrollTop = start + dist * eased;
+        if (t < 1) requestAnimationFrame(step);
+        else resolve();
+      };
+      requestAnimationFrame(step);
+    });
+  };
+
   const setContentFaded = (faded) => {
     fadeTargets.forEach(node => {
       node.style.transition = `opacity ${fadeDurationMs}ms ease`;
@@ -957,10 +990,17 @@ function initProjectOverlayExperience({
       if (transitionInFlight) return false;
       transitionInFlight = true;
 
+      const panel = getActivePanel();
+      if (panel) {
+        await smoothPanelScrollTo(panel, 0, scrollDurationMs);
+      }
+
       moveFloatingTitleToBodyFixed();
 
       const source = floatingSource;
-      const desiredTop = window.innerHeight * titleTargetY;
+      const desiredTop = floatingTitle
+        ? floatingTitle.getBoundingClientRect().top
+        : window.innerHeight * titleTargetY;
       if (source) {
         const sourceAbsoluteTop = source.getBoundingClientRect().top + window.scrollY;
         const targetScrollY = Math.max(0, sourceAbsoluteTop - desiredTop);
@@ -976,7 +1016,9 @@ function initProjectOverlayExperience({
           });
 
       if (floatingTitle) {
-        await animateCloneTo(floatingTitle, target, floatDurationMs);
+        floatingTitle.style.transition = "none";
+        floatingTitle.style.top = `${desiredTop}px`;
+        await animateCloneXTo(floatingTitle, target.left, floatDurationMs);
       }
 
       transitionInFlight = false;
