@@ -1,12 +1,15 @@
 // js/scramble.js
 export function initScramble() {
   const LETTERS_AND_SYMBOLS = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','!','@','#','$','%','^','&','*','-','_','+','=',';',':','<','>',','];
+  const AUTO_LOOP_SYMBOLS = ["#","€","&","%","/","*","$","!"];
   const EFFECT1 = { duration: 0.03, repeat: 3, repeatDelay: 0.04, stagger: 0.07 };
   const EFFECT2 = { duration: 0.03, repeat: 2, repeatDelay: 0.05, stagger: 0.06, bgDuration: 1, bgEase: "expo", bgBackDuration: 0.6, bgBackEase: "power4" };
+  const AUTO_LOOP_SPEED = 200;
   const LOOP_DELAY = 2000;
   let preloaderJustFinished = false;
 
   const randSymbol = () => LETTERS_AND_SYMBOLS[Math.floor(Math.random() * LETTERS_AND_SYMBOLS.length)];
+  const randAutoLoopSymbol = () => AUTO_LOOP_SYMBOLS[Math.floor(Math.random() * AUTO_LOOP_SYMBOLS.length)];
   const hasGsap = () => (typeof window !== "undefined" && typeof window.gsap !== "undefined");
   const scrollState = {
     bound: false,
@@ -164,6 +167,7 @@ export function initScramble() {
 
     let running = false;
     let loadTimers = [];
+    let autoLoopAnimTimers = [];
     let hoverTimer = null;
     let autoLoopTimer = null;
     let pendingBack = false;
@@ -179,6 +183,9 @@ export function initScramble() {
         clearTimeout(hoverTimer);
         hoverTimer = null;
       }
+    };
+    const clearAutoLoopAnimTimers = () => {
+      clearTimers(autoLoopAnimTimers);
     };
     const clearAutoLoopTimer = () => {
       if (autoLoopTimer) {
@@ -308,6 +315,66 @@ export function initScramble() {
 
     const startHoverHandlers = () => {
       if (isAutoLoop) {
+        const runAutoLoopPass = (onDone) => {
+          if (running || animatable.length === 0) {
+            onDone && onDone();
+            return;
+          }
+          running = true;
+          clearAutoLoopAnimTimers();
+          showScramble(el);
+          setOriginalText();
+
+          const overlap = 0.5;
+          const baseStagger = Math.max(20, Math.round(AUTO_LOOP_SPEED * (1 - overlap)));
+          const flashInterval = Math.max(18, Math.round(AUTO_LOOP_SPEED / 2));
+          let completed = 0;
+
+          animatable.forEach((span, i) => {
+            const flashes = 1 + Math.floor(Math.random() * 2);
+            const start = i * baseStagger;
+
+            for (let f=0; f<flashes; f++){
+              autoLoopAnimTimers.push(setTimeout(() => {
+                span.classList.add("active-current");
+                span.textContent = randAutoLoopSymbol();
+
+                if (i>0){
+                  const trail = animatable[i-1];
+                  trail.classList.add("active-trail");
+                  trail.textContent = randAutoLoopSymbol();
+                }
+                if (i>1){
+                  const older = animatable[i-2];
+                  if (older){
+                    older.classList.remove("active-trail");
+                    older.textContent = older.dataset.original === " " ? "\u00A0" : older.dataset.original;
+                  }
+                }
+              }, start + f*flashInterval));
+            }
+
+            const revealTime = start + flashes*flashInterval + Math.round(AUTO_LOOP_SPEED * 0.1);
+            autoLoopAnimTimers.push(setTimeout(() => {
+              span.classList.remove("active-current","active-trail");
+              span.textContent = span.dataset.original === " " ? "\u00A0" : span.dataset.original;
+
+              if (i>0){
+                const prev = animatable[i-1];
+                prev.classList.remove("active-trail");
+                prev.textContent = prev.dataset.original === " " ? "\u00A0" : prev.dataset.original;
+              }
+
+              completed++;
+              if (completed >= animatable.length){
+                running = false;
+                clearAutoLoopAnimTimers();
+                onDone && onDone();
+              }
+            }, revealTime));
+          });
+        };
+
         const loop = () => {
           clearAutoLoopTimer();
           autoLoopTimer = setTimeout(() => {
@@ -315,7 +382,7 @@ export function initScramble() {
               loop();
               return;
             }
-            runHover(() => {
+            runAutoLoopPass(() => {
               loop();
             });
           }, loopPause);
@@ -326,7 +393,7 @@ export function initScramble() {
             loop();
             return;
           }
-          runHover(() => {
+          runAutoLoopPass(() => {
             loop();
           });
         }, loopStartDelay);
