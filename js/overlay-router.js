@@ -150,7 +150,9 @@ export function initOverlayRouter({
   closeSelector = "[data-overlay-close]",
   activePanelClass = "is-active",
   openBodyClass = "overlay-open",
-  lazyLoadOnOpen = true
+  lazyLoadOnOpen = true,
+  beforeOpen = null,
+  onRouteChange = null
 } = {}) {
   const root = document.querySelector(rootSelector);
   if (!root) return null;
@@ -208,6 +210,7 @@ export function initOverlayRouter({
 
   state.subscribe(route => {
     view.render(route);
+    if (typeof onRouteChange === "function") onRouteChange(route);
   });
 
   const initialRoute = readRouteFromLocation();
@@ -222,7 +225,7 @@ export function initOverlayRouter({
 
   document.addEventListener(
     "click",
-    event => {
+    async event => {
       const openTrigger = event.target.closest(openSelector);
       if (openTrigger) {
         const explicitRoute = openTrigger.getAttribute("data-overlay-open");
@@ -230,6 +233,16 @@ export function initOverlayRouter({
         const route = resolveRoute(explicitRoute || (href && href.startsWith("#") ? href.slice(1) : null));
         if (route) {
           event.preventDefault();
+          if (typeof beforeOpen === "function") {
+            const shouldContinue = await beforeOpen({
+              route,
+              trigger: openTrigger,
+              event,
+              open: () => openRoute(route)
+            });
+            if (shouldContinue === false) return;
+            if (state.getCurrentRoute() === route) return;
+          }
           openRoute(route);
           return;
         }

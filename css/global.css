@@ -209,3 +209,61 @@ html.preloader-active .scramble-text{visibility:hidden}
   width:0;
   border-left:1px dashed rgba(255, 255, 255, 0.18);
 }
+
+/* =========================
+   OVERLAY ROUTER
+   ========================= */
+
+/* Overlay root: present in DOM but inactive by default */
+[data-overlay-root] {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+/* Active when a panel is open */
+[data-overlay-root].is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Every panel fills viewport */
+[data-overlay-panel] {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+
+/* JS sets .is-active on current panel */
+[data-overlay-panel].is-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Optional: backdrop layer if you add one inside each panel */
+.overlay-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+/* Optional: main content wrapper inside panel */
+.overlay-content {
+  position: relative;
+  z-index: 1;
+  min-height: 100%;
+  background: #fff;
+}
+
+/* Lock background scroll when overlay open (JS already toggles this class) */
+html.overlay-open,
+body.overlay-open {
+  overflow: hidden;
+}

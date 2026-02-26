@@ -712,6 +712,154 @@ function initHeaderOnBlackBox() {
   window.addEventListener("resize", requestUpdate);
 }
 
+function initProjectOverlayExperience({
+  wrapperSelector = ".page_wrapper",
+  overlayRootSelector = "[data-overlay-root]",
+  titleSelector = ".project_name",
+  projectSelector = ".marquee_project",
+  fadeDurationMs = 600,
+  scrollDurationMs = 900,
+  floatDurationMs = 900,
+  titleTargetX = 0.4
+} = {}) {
+  const wrapper = document.querySelector(wrapperSelector);
+  const overlayRoot = document.querySelector(overlayRootSelector);
+
+  if (!wrapper || !overlayRoot) {
+    return initOverlayRouter();
+  }
+
+  const fadeTargets = Array.from(wrapper.children).filter(child => child !== overlayRoot);
+  let floatingTitle = null;
+  let floatingSource = null;
+  let transitionInFlight = false;
+
+  const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const smoothScrollTo = (y, durationMs) => {
+    const startY = window.scrollY;
+    const distance = y - startY;
+    if (Math.abs(distance) < 1 || durationMs <= 0) {
+      window.scrollTo(0, y);
+      return Promise.resolve();
+    }
+
+    const startTime = performance.now();
+    return new Promise(resolve => {
+      const step = (now) => {
+        const t = Math.min(1, (now - startTime) / durationMs);
+        const eased = -(Math.cos(Math.PI * t) - 1) / 2;
+        window.scrollTo(0, startY + distance * eased);
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          resolve();
+        }
+      };
+      requestAnimationFrame(step);
+    });
+  };
+
+  const animateCloneTo = (el, { left, top }, durationMs) => {
+    if (!el) return Promise.resolve();
+    return new Promise(resolve => {
+      el.style.transition = `left ${durationMs}ms cubic-bezier(0.22, 1, 0.36, 1), top ${durationMs}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+      requestAnimationFrame(() => {
+        el.style.left = `${left}px`;
+        el.style.top = `${top}px`;
+      });
+      setTimeout(resolve, durationMs + 30);
+    });
+  };
+
+  const setContentFaded = (faded) => {
+    fadeTargets.forEach(node => {
+      node.style.transition = `opacity ${fadeDurationMs}ms ease`;
+      node.style.opacity = faded ? "0" : "1";
+      node.style.pointerEvents = faded ? "none" : "";
+    });
+  };
+
+  const clearFloatingTitle = () => {
+    if (floatingTitle && floatingTitle.parentNode) {
+      floatingTitle.parentNode.removeChild(floatingTitle);
+    }
+    floatingTitle = null;
+    if (floatingSource) {
+      floatingSource.style.visibility = "";
+    }
+    floatingSource = null;
+  };
+
+  const findProjectTitle = (trigger) => {
+    const project = trigger.closest(projectSelector);
+    if (project) {
+      const title = project.querySelector(titleSelector);
+      if (title) return title;
+    }
+    return null;
+  };
+
+  return initOverlayRouter({
+    beforeOpen: async ({ trigger }) => {
+      if (transitionInFlight) return false;
+      transitionInFlight = true;
+
+      const title = findProjectTitle(trigger);
+      if (!title) {
+        setContentFaded(true);
+        transitionInFlight = false;
+        return true;
+      }
+
+      const topOffset = window.innerHeight * 0.5;
+      const titleAbsoluteTop = title.getBoundingClientRect().top + window.scrollY;
+      const targetScrollY = Math.max(0, titleAbsoluteTop - topOffset);
+
+      await smoothScrollTo(targetScrollY, scrollDurationMs);
+
+      const rect = title.getBoundingClientRect();
+      const clone = title.cloneNode(true);
+      Object.assign(clone.style, {
+        position: "fixed",
+        left: `${rect.left}px`,
+        top: `${rect.top}px`,
+        margin: "0",
+        zIndex: "10020",
+        pointerEvents: "none",
+        whiteSpace: "nowrap"
+      });
+
+      title.style.visibility = "hidden";
+      floatingTitle = clone;
+      floatingSource = title;
+      document.body.appendChild(clone);
+
+      setContentFaded(true);
+
+      await Promise.all([
+        animateCloneTo(
+          clone,
+          {
+            left: window.innerWidth * titleTargetX,
+            top: window.innerHeight * 0.5
+          },
+          floatDurationMs
+        ),
+        wait(fadeDurationMs)
+      ]);
+
+      transitionInFlight = false;
+      return true;
+    },
+    onRouteChange: (route) => {
+      if (route) return;
+      setContentFaded(false);
+      clearFloatingTitle();
+    }
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const onAboutPage = isAboutPage();
 
@@ -725,7 +873,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initScrollBlurHeadings();
   initAutoNameReveal();
   initRevealNames();
-  initOverlayRouter();
+  initProjectOverlayExperience();
   if (onAboutPage) {
     initAboutEnterEffects();
   } else if (!document.body.classList.contains("page-index")) {
