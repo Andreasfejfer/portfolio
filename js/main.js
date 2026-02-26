@@ -955,18 +955,21 @@ function initProjectOverlayExperience({
       moveFloatingTitleToBodyFixed();
 
       const source = floatingSource;
+      const desiredTop = window.innerHeight * titleTargetY;
       if (source) {
-        const desiredTop = floatingTitle
-          ? floatingTitle.getBoundingClientRect().top
-          : window.innerHeight * closeTargetY;
         const sourceAbsoluteTop = source.getBoundingClientRect().top + window.scrollY;
         const targetScrollY = Math.max(0, sourceAbsoluteTop - desiredTop);
         await smoothScrollTo(targetScrollY, scrollDurationMs, { preferNative: true });
       }
 
+      if (floatingTitle) {
+        floatingTitle.style.transition = "none";
+        floatingTitle.style.top = `${desiredTop}px`;
+      }
+
       const sourceRect = source ? source.getBoundingClientRect() : null;
       const target = sourceRect
-        ? { left: sourceRect.left, top: floatingTitle ? floatingTitle.getBoundingClientRect().top : sourceRect.top }
+        ? { left: sourceRect.left, top: desiredTop }
         : (floatingReturnRect || {
             left: window.innerWidth * closeTargetX,
             top: window.innerHeight * closeTargetY

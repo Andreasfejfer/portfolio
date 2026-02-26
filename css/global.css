@@ -215,18 +215,16 @@ html.preloader-active .scramble-text{visibility:hidden}
    ========================= */
 :root{
   --overlay-fade-duration: 650ms;
+  --overlay-header-offset: 0px;
 }
 
 /* Overlay root: present in DOM but inactive by default */
 .root,
 [data-overlay-root] {
   position: fixed;
-  left: 0;
-  right: 0;
-  top: var(--overlay-header-offset, 4.5rem);
-  bottom: 0;
+  inset: 0;
   width: 100vw;
-  height: auto;
+  height: 100dvh;
   z-index: 9999;
   overflow: hidden;
   opacity: 0;
