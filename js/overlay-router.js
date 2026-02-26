@@ -152,6 +152,7 @@ export function initOverlayRouter({
   openBodyClass = "overlay-open",
   lazyLoadOnOpen = true,
   beforeOpen = null,
+  beforeClose = null,
   onRouteChange = null
 } = {}) {
   const root = document.querySelector(rootSelector);
@@ -208,6 +209,19 @@ export function initOverlayRouter({
     state.setRoute(null);
   };
 
+  const runCloseRoute = async (event = null) => {
+    if (!state.getCurrentRoute()) return;
+    if (typeof beforeClose === "function") {
+      const shouldContinue = await beforeClose({
+        route: state.getCurrentRoute(),
+        event,
+        close: () => closeRoute()
+      });
+      if (shouldContinue === false) return;
+    }
+    closeRoute();
+  };
+
   state.subscribe(route => {
     view.render(route);
     if (typeof onRouteChange === "function") onRouteChange(route);
@@ -251,7 +265,7 @@ export function initOverlayRouter({
       const closeTrigger = event.target.closest(closeSelector);
       if (closeTrigger) {
         event.preventDefault();
-        closeRoute();
+        runCloseRoute(event);
       }
     },
     true
@@ -260,7 +274,7 @@ export function initOverlayRouter({
   document.addEventListener("keydown", event => {
     if (event.key !== "Escape") return;
     if (!state.getCurrentRoute()) return;
-    closeRoute();
+    runCloseRoute(event);
   });
 
   window.addEventListener("popstate", syncFromLocation, { passive: true });

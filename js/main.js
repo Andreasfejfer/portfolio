@@ -270,6 +270,27 @@ function loadLenisFromCdn() {
   });
 }
 
+function setLenisLocked(lockKey, locked) {
+  if (!window.__LENIS_LOCKS) window.__LENIS_LOCKS = new Set();
+  const key = String(lockKey || "default");
+
+  if (locked) {
+    window.__LENIS_LOCKS.add(key);
+  } else {
+    window.__LENIS_LOCKS.delete(key);
+  }
+
+  const shouldLock = window.__LENIS_LOCKS.size > 0;
+  const lenis = window.__LENIS_INSTANCE;
+  if (lenis && typeof lenis.stop === "function" && typeof lenis.start === "function") {
+    if (shouldLock) lenis.stop();
+    else lenis.start();
+    return;
+  }
+
+  window.__LENIS_PENDING_LOCK = shouldLock;
+}
+
 function initLenisSmoothScroll() {
   if (window.__LENIS_INIT === true) return;
 
@@ -288,22 +309,12 @@ function initLenisSmoothScroll() {
 
     window.__LENIS_INIT = true;
     window.__LENIS_INSTANCE = lenis;
+    window.__setLenisLocked = setLenisLocked;
 
-    const syncLenisWithOverlayState = () => {
-      const overlayOpen =
-        document.documentElement.classList.contains("overlay-open") ||
-        document.body.classList.contains("overlay-open");
-      if (overlayOpen) {
-        lenis.stop();
-      } else {
-        lenis.start();
-      }
-    };
-
-    const observer = new MutationObserver(syncLenisWithOverlayState);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
-    syncLenisWithOverlayState();
+    const shouldStartLocked =
+      window.__LENIS_PENDING_LOCK === true ||
+      (window.__LENIS_LOCKS && window.__LENIS_LOCKS.size > 0);
+    if (shouldStartLocked) lenis.stop();
 
     lenis.on("scroll", () => {
       if (typeof window.ScrollTrigger !== "undefined" && typeof window.ScrollTrigger.update === "function") {
@@ -736,7 +747,10 @@ function initProjectOverlayExperience({
   fadeDurationMs = 600,
   scrollDurationMs = 900,
   floatDurationMs = 900,
-  titleTargetX = 0.4
+  titleTargetX = 0.3,
+  titleTargetY = 0.4,
+  closeTargetX = 0.25,
+  closeTargetY = 0.5
 } = {}) {
   const wrapper = document.querySelector(wrapperSelector);
   const overlayRoot = document.querySelector(overlayRootSelector);
@@ -748,11 +762,24 @@ function initProjectOverlayExperience({
   const fadeTargets = Array.from(wrapper.children).filter(child => child !== overlayRoot);
   let floatingTitle = null;
   let floatingSource = null;
+  let floatingReturnRect = null;
   let transitionInFlight = false;
 
   const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   const smoothScrollTo = (y, durationMs) => {
+    const lenis = window.__LENIS_INSTANCE;
+    if (lenis && typeof lenis.scrollTo === "function") {
+      return new Promise(resolve => {
+        lenis.scrollTo(y, {
+          duration: Math.max(0, durationMs) / 1000,
+          lock: true,
+          easing: t => 1 - Math.pow(1 - t, 3),
+          onComplete: resolve
+        });
+      });
+    }
+
     const startY = window.scrollY;
     const distance = y - startY;
     if (Math.abs(distance) < 1 || durationMs <= 0) {
@@ -805,6 +832,34 @@ function initProjectOverlayExperience({
       floatingSource.style.visibility = "";
     }
     floatingSource = null;
+    floatingReturnRect = null;
+  };
+
+  const moveFloatingTitleToPanel = (route) => {
+    if (!floatingTitle || !route) return;
+    const panel = overlayRoot.querySelector(`[data-overlay-panel="${route}"]`);
+    if (!panel) return;
+
+    const titleRect = floatingTitle.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    const topInPanel = panel.scrollTop + (titleRect.top - panelRect.top);
+    const leftInPanel = panel.scrollLeft + (titleRect.left - panelRect.left);
+
+    floatingTitle.style.transition = "none";
+    floatingTitle.style.position = "absolute";
+    floatingTitle.style.top = `${topInPanel}px`;
+    floatingTitle.style.left = `${leftInPanel}px`;
+    panel.appendChild(floatingTitle);
+  };
+
+  const moveFloatingTitleToBodyFixed = () => {
+    if (!floatingTitle || floatingTitle.parentNode === document.body) return;
+    const rect = floatingTitle.getBoundingClientRect();
+    document.body.appendChild(floatingTitle);
+    floatingTitle.style.transition = "none";
+    floatingTitle.style.position = "fixed";
+    floatingTitle.style.top = `${rect.top}px`;
+    floatingTitle.style.left = `${rect.left}px`;
   };
 
   const findProjectTitle = (trigger) => {
@@ -835,6 +890,10 @@ function initProjectOverlayExperience({
       await smoothScrollTo(targetScrollY, scrollDurationMs);
 
       const rect = title.getBoundingClientRect();
+      floatingReturnRect = {
+        left: rect.left,
+        top: rect.top
+      };
       const clone = title.cloneNode(true);
       Object.assign(clone.style, {
         position: "fixed",
@@ -858,7 +917,7 @@ function initProjectOverlayExperience({
           clone,
           {
             left: window.innerWidth * titleTargetX,
-            top: window.innerHeight * 0.5
+            top: window.innerHeight * titleTargetY
           },
           floatDurationMs
         ),
@@ -868,8 +927,34 @@ function initProjectOverlayExperience({
       transitionInFlight = false;
       return true;
     },
+    beforeClose: async () => {
+      if (transitionInFlight) return false;
+      transitionInFlight = true;
+
+      moveFloatingTitleToBodyFixed();
+
+      const target = floatingReturnRect || {
+        left: window.innerWidth * closeTargetX,
+        top: window.innerHeight * closeTargetY
+      };
+
+      if (floatingTitle) {
+        await animateCloneTo(floatingTitle, target, floatDurationMs);
+      }
+
+      setContentFaded(false);
+      await wait(fadeDurationMs);
+
+      transitionInFlight = false;
+      return true;
+    },
     onRouteChange: (route) => {
-      if (route) return;
+      if (route) {
+        setLenisLocked("overlay-router", true);
+        moveFloatingTitleToPanel(route);
+        return;
+      }
+      setLenisLocked("overlay-router", false);
       setContentFaded(false);
       clearFloatingTitle();
     }

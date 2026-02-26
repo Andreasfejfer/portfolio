@@ -267,5 +267,4 @@ html.overlay-open,
 body.overlay-open {
   overflow: hidden;
   overscroll-behavior: none;
-  touch-action: none;
 }
