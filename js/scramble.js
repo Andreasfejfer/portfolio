@@ -88,6 +88,7 @@ export function initScramble() {
     el.dataset.scrambleInit = "1";
     const isScrollScramble = el.classList.contains('scramble-scroll');
     const isLoop = el.classList.contains('scramble-loop');
+    const isAutoLoop = el.classList.contains('scramble-autoloop');
 
     if (el.classList.contains('scramble-black')) {
       el.classList.add('scramble-color-black');
@@ -164,6 +165,7 @@ export function initScramble() {
     let running = false;
     let loadTimers = [];
     let hoverTimer = null;
+    let autoLoopTimer = null;
     let pendingBack = false;
 
     const clearTimers = (list) => {
@@ -176,6 +178,12 @@ export function initScramble() {
       if (hoverTimer) {
         clearTimeout(hoverTimer);
         hoverTimer = null;
+      }
+    };
+    const clearAutoLoopTimer = () => {
+      if (autoLoopTimer) {
+        clearTimeout(autoLoopTimer);
+        autoLoopTimer = null;
       }
     };
 
@@ -299,6 +307,32 @@ export function initScramble() {
     const loopPause = readVarMs(el, "--scramble-loop-pause", LOOP_DELAY);
 
     const startHoverHandlers = () => {
+      if (isAutoLoop) {
+        const loop = () => {
+          clearAutoLoopTimer();
+          autoLoopTimer = setTimeout(() => {
+            if (running) {
+              loop();
+              return;
+            }
+            runHover(() => {
+              loop();
+            });
+          }, loopPause);
+        };
+        clearAutoLoopTimer();
+        autoLoopTimer = setTimeout(() => {
+          if (running) {
+            loop();
+            return;
+          }
+          runHover(() => {
+            loop();
+          });
+        }, loopStartDelay);
+        return;
+      }
+
       const startLoopingHover = () => {
         clearHoverTimer();
         const loop = () => {
