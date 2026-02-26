@@ -870,27 +870,10 @@ function initProjectOverlayExperience({
     });
   };
 
-  const clearFloatingTitle = ({ immediate = true } = {}) => {
+  const clearFloatingTitle = () => {
     if (floatingClearTimer) {
       clearTimeout(floatingClearTimer);
       floatingClearTimer = null;
-    }
-
-    if (!immediate && floatingTitle) {
-      if (floatingSource) {
-        floatingSource.style.transition = "none";
-        floatingSource.style.opacity = "1";
-      }
-      floatingTitle.style.transition = "none";
-      floatingTitle.style.opacity = "1";
-      floatingClearTimer = setTimeout(() => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            clearFloatingTitle({ immediate: true });
-          });
-        });
-      }, 80);
-      return;
     }
 
     if (floatingScrollPanel && floatingScrollHandler) {
@@ -909,6 +892,25 @@ function initProjectOverlayExperience({
     }
     floatingSource = null;
     floatingReturnRect = null;
+  };
+
+  const handoffFloatingTitleAfterFadeIn = () => {
+    if (!floatingTitle) return;
+    if (floatingClearTimer) {
+      clearTimeout(floatingClearTimer);
+      floatingClearTimer = null;
+    }
+    floatingClearTimer = setTimeout(() => {
+      if (floatingSource) {
+        floatingSource.style.transition = "none";
+        floatingSource.style.opacity = "1";
+      }
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          clearFloatingTitle();
+        });
+      });
+    }, fadeDurationMs + 40);
   };
 
   const bindFloatingTitleToPanelScroll = (route) => {
@@ -1091,7 +1093,7 @@ function initProjectOverlayExperience({
       }
       setLenisLocked("overlay-router", false);
       setContentFaded(false);
-      clearFloatingTitle({ immediate: false });
+      handoffFloatingTitleAfterFadeIn();
     }
   });
 }
