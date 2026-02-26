@@ -6,8 +6,8 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
   const marquee = typeof selector === 'string' ? document.querySelector(selector) : selector;
   if (!marquee) return;
 
-  // Only select image elements with the correct class
-  const images = Array.from(marquee.querySelectorAll('.marquee__img'));
+  // Support both legacy and current class naming.
+  const images = Array.from(marquee.querySelectorAll('.marquee__img, .marquee_img'));
   if (!images.length) return;
 
   const setupVideo = video => {
@@ -55,20 +55,20 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
 
   // Add hover effect: highlight all images with the same data-marquee-id
   track.addEventListener('mouseover', function (e) {
-    const target = e.target.closest('.marquee__img');
+    const target = e.target.closest('.marquee__img, .marquee_img');
     if (target && target.dataset.marqueeId) {
       const id = target.dataset.marqueeId;
-      marquee.querySelectorAll('.marquee__img[data-marquee-id="' + id + '"]').forEach(img => {
-        img.classList.add('marquee__img--active');
+      marquee.querySelectorAll('.marquee__img[data-marquee-id="' + id + '"], .marquee_img[data-marquee-id="' + id + '"]').forEach(img => {
+        img.classList.add('marquee__img--active', 'marquee_img--active');
       });
     }
   });
   track.addEventListener('mouseout', function (e) {
-    const target = e.target.closest('.marquee__img');
+    const target = e.target.closest('.marquee__img, .marquee_img');
     if (target && target.dataset.marqueeId) {
       const id = target.dataset.marqueeId;
-      marquee.querySelectorAll('.marquee__img[data-marquee-id="' + id + '"]').forEach(img => {
-        img.classList.remove('marquee__img--active');
+      marquee.querySelectorAll('.marquee__img[data-marquee-id="' + id + '"], .marquee_img[data-marquee-id="' + id + '"]').forEach(img => {
+        img.classList.remove('marquee__img--active', 'marquee_img--active');
       });
     }
   });

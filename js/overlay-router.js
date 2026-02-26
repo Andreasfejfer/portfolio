@@ -12,6 +12,63 @@ function buildHash(route) {
   return route ? `#${route}` : "";
 }
 
+function loadLazyMedia(container) {
+  if (!container || container.dataset.overlayLazyLoaded === "1") return;
+  container.dataset.overlayLazyLoaded = "1";
+
+  container.querySelectorAll("img[data-src], img[data-srcset]").forEach(img => {
+    const src = img.getAttribute("data-src");
+    const srcset = img.getAttribute("data-srcset");
+    if (src) {
+      img.setAttribute("src", src);
+      img.removeAttribute("data-src");
+    }
+    if (srcset) {
+      img.setAttribute("srcset", srcset);
+      img.removeAttribute("data-srcset");
+    }
+    if (!img.hasAttribute("loading")) img.setAttribute("loading", "lazy");
+    if (!img.hasAttribute("decoding")) img.setAttribute("decoding", "async");
+  });
+
+  container.querySelectorAll("source[data-srcset]").forEach(source => {
+    const srcset = source.getAttribute("data-srcset");
+    if (!srcset) return;
+    source.setAttribute("srcset", srcset);
+    source.removeAttribute("data-srcset");
+  });
+
+  container.querySelectorAll("iframe[data-src]").forEach(iframe => {
+    const src = iframe.getAttribute("data-src");
+    if (!src) return;
+    iframe.setAttribute("src", src);
+    iframe.removeAttribute("data-src");
+  });
+
+  container.querySelectorAll("video[data-src], video[data-poster], video source[data-src]").forEach(node => {
+    const video = node.tagName === "VIDEO" ? node : node.closest("video");
+    if (!video) return;
+    const src = video.getAttribute("data-src");
+    const poster = video.getAttribute("data-poster");
+    if (poster) {
+      video.setAttribute("poster", poster);
+      video.removeAttribute("data-poster");
+    }
+    if (src) {
+      video.setAttribute("src", src);
+      video.removeAttribute("data-src");
+    }
+    if (video.preload === "none") video.preload = "metadata";
+    video.querySelectorAll("source[data-src]").forEach(source => {
+      const sourceSrc = source.getAttribute("data-src");
+      if (!sourceSrc) return;
+      source.setAttribute("src", sourceSrc);
+      source.removeAttribute("data-src");
+    });
+    if (typeof video.load === "function") video.load();
+  });
+}
+
 function createOverlayState(validRoutes) {
   let currentRoute = null;
   const listeners = new Set();
@@ -47,7 +104,8 @@ function createOverlayView({
   panelSelector,
   panelAttribute,
   activePanelClass,
-  openBodyClass
+  openBodyClass,
+  lazyLoadOnOpen
 }) {
   const panels = Array.from(root.querySelectorAll(panelSelector));
   const panelByRoute = new Map();
@@ -71,6 +129,7 @@ function createOverlayView({
       panel.hidden = !isActive;
       panel.setAttribute("aria-hidden", String(!isActive));
       if ("inert" in panel) panel.inert = !isActive;
+      if (isActive && lazyLoadOnOpen) loadLazyMedia(panel);
     });
 
     root.classList.toggle(activePanelClass, hasOpenPanel);
@@ -87,10 +146,11 @@ export function initOverlayRouter({
   rootSelector = "[data-overlay-root]",
   panelSelector = "[data-overlay-panel]",
   panelAttribute = "data-overlay-panel",
-  openSelector = "[data-overlay-open], a[href^='#']",
+  openSelector = "[data-overlay-open]",
   closeSelector = "[data-overlay-close]",
   activePanelClass = "is-active",
-  openBodyClass = "overlay-open"
+  openBodyClass = "overlay-open",
+  lazyLoadOnOpen = true
 } = {}) {
   const root = document.querySelector(rootSelector);
   if (!root) return null;
@@ -100,7 +160,8 @@ export function initOverlayRouter({
     panelSelector,
     panelAttribute,
     activePanelClass,
-    openBodyClass
+    openBodyClass,
+    lazyLoadOnOpen
   });
 
   const state = createOverlayState(view.getRoutes());
@@ -182,6 +243,12 @@ export function initOverlayRouter({
     },
     true
   );
+
+  document.addEventListener("keydown", event => {
+    if (event.key !== "Escape") return;
+    if (!state.getCurrentRoute()) return;
+    closeRoute();
+  });
 
   window.addEventListener("popstate", syncFromLocation, { passive: true });
   window.addEventListener("hashchange", syncFromLocation, { passive: true });
