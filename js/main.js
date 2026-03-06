@@ -206,6 +206,7 @@ import { initRepet } from "./repet.js";
 import { initBackground } from "./background.js";
 import { initScrollBlurHeadings, initRevealNames } from "./scroll-blur.js";
 import { initOverlayRouter } from "./overlay-router.js";
+import { initMarquee } from "./marquee.js";
 
 // Simple page fade-out on internal navigation (no fade-in to avoid header flicker)
 function initPageFade({ durationMs = 2000 } = {}) {
@@ -1113,6 +1114,9 @@ function initProjectOverlayExperience({
 
 document.addEventListener("DOMContentLoaded", () => {
   const onAboutPage = isAboutPage();
+  document.querySelectorAll(".s-marquee, .marquee").forEach(el => {
+    initMarquee({ selector: el, speed: 40 });
+  });
 
   initPageFade();
   initLenisSmoothScroll();
