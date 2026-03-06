@@ -7,13 +7,15 @@ body{
 /* iPad/Safari-safe full-height utility for sections using viewport height */
 .vh-safe{
   min-height:100vh;
-  min-height:100svh;
-  min-height:100dvh;
 }
 
 @supports (-webkit-touch-callout: none){
-  .vh-safe{
-    min-height:-webkit-fill-available;
+  @media (hover: none) and (pointer: coarse) and (min-width: 768px){
+    .vh-safe{
+      min-height:100svh;
+      min-height:100dvh;
+      min-height:-webkit-fill-available;
+    }
   }
 }
 
