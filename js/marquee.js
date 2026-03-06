@@ -11,6 +11,7 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
   const videoSelector = '.marquee_video, .marquue_video';
   const mediaSelector = imageSelector + ', ' + videoSelector;
   const initializedVideos = new WeakSet();
+  const playbackClockStart = performance.now() / 1000;
 
   // Normalize legacy image-only markup into wrapper items.
   const normalizeToItem = node => {
@@ -45,6 +46,15 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
     const forcePlay = () => {
       video.play().catch(() => {});
     };
+    const syncToClock = (hardSeek = false) => {
+      if (!video.duration || !Number.isFinite(video.duration) || video.duration <= 0) return;
+      const nowSeconds = performance.now() / 1000;
+      const expected = (nowSeconds - playbackClockStart) % video.duration;
+      const drift = Math.abs(video.currentTime - expected);
+      if (hardSeek || drift > 0.45) {
+        video.currentTime = expected;
+      }
+    };
 
     video.autoplay = true;
     video.loop = true;
@@ -63,25 +73,38 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
 
     // Safety fallback: if the browser ignores loop, restart manually.
     video.addEventListener('ended', () => {
-      video.currentTime = 0;
+      syncToClock(true);
       forcePlay();
     });
 
     // Some browsers can pause/stall autoplaying videos inside moving marquees.
     video.addEventListener('pause', () => {
-      if (!video.ended && !video.seeking) forcePlay();
-    });
-    video.addEventListener('stalled', forcePlay);
-    video.addEventListener('suspend', forcePlay);
-    video.addEventListener('canplay', forcePlay);
-    video.addEventListener('timeupdate', () => {
-      if (!video.duration || !Number.isFinite(video.duration)) return;
-      if (video.duration - video.currentTime < 0.08) {
-        video.currentTime = 0;
+      if (!video.ended && !video.seeking) {
+        syncToClock(true);
         forcePlay();
       }
     });
+    video.addEventListener('stalled', () => {
+      syncToClock(true);
+      forcePlay();
+    });
+    video.addEventListener('suspend', () => {
+      syncToClock(true);
+      forcePlay();
+    });
+    video.addEventListener('canplay', () => {
+      syncToClock(false);
+      forcePlay();
+    });
+    video.addEventListener('loadedmetadata', () => {
+      syncToClock(true);
+      forcePlay();
+    });
+    video.addEventListener('timeupdate', () => {
+      syncToClock(false);
+    });
 
+    syncToClock(true);
     forcePlay();
   };
 
@@ -118,6 +141,11 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
   const keepVideosPlaying = () => {
     track.querySelectorAll('video').forEach(video => {
       if (video.paused && !video.ended) {
+        if (video.duration && Number.isFinite(video.duration) && video.duration > 0) {
+          const nowSeconds = performance.now() / 1000;
+          const expected = (nowSeconds - playbackClockStart) % video.duration;
+          video.currentTime = expected;
+        }
         video.play().catch(() => {});
       }
     });
