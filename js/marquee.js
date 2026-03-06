@@ -35,7 +35,12 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
   if (!items.length) return;
   const itemByIdSelector = id => '.marquee__item[data-marquee-id="' + id + '"], .marquee_div[data-marquee-id="' + id + '"]';
 
-  const setupVideo = video => {
+  const setupVideo = node => {
+    const video = node && node.tagName === 'VIDEO' ? node : node && node.querySelector ? node.querySelector('video') : null;
+    if (!video) return;
+    if (video.dataset.marqueeVideoInit === '1') return;
+    video.dataset.marqueeVideoInit = '1';
+
     video.autoplay = true;
     video.loop = true;
     video.muted = true;
@@ -46,6 +51,13 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
     video.setAttribute('muted', '');
     video.setAttribute('playsinline', '');
     video.removeAttribute('controls');
+
+    // Safety fallback: if the browser ignores loop, restart manually.
+    video.addEventListener('ended', () => {
+      video.currentTime = 0;
+      video.play().catch(() => {});
+    });
+
     video.play().catch(() => {});
   };
 
