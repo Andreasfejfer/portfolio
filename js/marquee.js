@@ -8,7 +8,8 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
 
   const itemSelector = '.marquee__item, .marquee_div';
   const imageSelector = '.marquee__img, .marquee_img';
-  const mediaSelector = imageSelector + ', .marquee_video';
+  const videoSelector = '.marquee_video, .marquue_video';
+  const mediaSelector = imageSelector + ', ' + videoSelector;
 
   // Normalize legacy image-only markup into wrapper items.
   const normalizeToItem = node => {
@@ -48,7 +49,7 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
     video.play().catch(() => {});
   };
 
-  marquee.querySelectorAll('.marquee_video').forEach(setupVideo);
+  marquee.querySelectorAll(videoSelector).forEach(setupVideo);
 
   // Assign a unique data-marquee-id to each item (before duplication)
   items.forEach((item, i) => {
@@ -72,7 +73,7 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
     track.innerHTML += track.innerHTML;
   }
 
-  track.querySelectorAll('.marquee_video').forEach(setupVideo);
+  track.querySelectorAll(videoSelector).forEach(setupVideo);
 
   // Set animation duration based on speed
   track.style.animationDuration = speed + 's';
