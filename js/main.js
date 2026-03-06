@@ -87,117 +87,6 @@ function animateWrapperEnter({
   });
 }
 
-
-function waitForImages(track) {
-  const images = Array.from(track.querySelectorAll('img'));
-  if (images.length === 0) return Promise.resolve();
-  return Promise.all(images.map(img => {
-    if (img.complete && img.naturalWidth !== 0) return Promise.resolve();
-    return new Promise(resolve => {
-      img.addEventListener('load', resolve, { once: true });
-      img.addEventListener('error', resolve, { once: true });
-    });
-  }));
-}
-
-function duplicateMarqueeContent(track) {
-  track.innerHTML += track.innerHTML;
-}
-
-async function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14, fadeInDelayMs = 500, fadeInDurationMs = 600 } = {}) {
-  const tracks = document.querySelectorAll(trackSelector);
-  for (const track of tracks) {
-    await waitForImages(track);
-    // Assign unique data-marquee-id to each image before duplication (use correct class)
-    const images = Array.from(track.querySelectorAll('img.marquee_img'));
-    images.forEach((img, i) => {
-      img.dataset.marqueeId = i;
-    });
-    duplicateMarqueeContent(track);
-    const totalWidth = track.scrollWidth / 2;
-    let object = { value: 1 };
-    let tween = gsap.to(track, {
-      x: () => `-${totalWidth}px`,
-      duration: duration,
-      ease: "none",
-      repeat: -1,
-      modifiers: {
-        x: gsap.utils.unitize(x => parseFloat(x) % totalWidth)
-      }
-    });
-    // Fade images in a bit slower
-    images.forEach(img => {
-      img.style.opacity = "0";
-      img.style.transition = `opacity ${fadeInDurationMs}ms ease`;
-      setTimeout(() => {
-        img.style.opacity = "1";
-      }, fadeInDelayMs);
-    });
-    // Marquee no longer pauses on hover
-
-    // Hover effect: highlight all images with the same data-marquee-id (use correct class)
-    // Store original src/alt for all images
-    const allImgs = Array.from(track.querySelectorAll('img.marquee_img'));
-    allImgs.forEach(img => {
-      img.dataset.originalSrc = img.src;
-      img.dataset.originalAlt = img.alt;
-    });
-
-    let isHovering = false;
-    let hoverTimeout = null;
-
-    function activateAllImgs(target) {
-      const newSrc = target.src;
-      const newAlt = target.alt;
-      allImgs.forEach(img => {
-        img.src = newSrc;
-        img.alt = newAlt;
-        img.classList.add('marquee_img--active');
-      });
-    }
-    function deactivateAllImgs() {
-      allImgs.forEach(img => {
-        img.src = img.dataset.originalSrc;
-        img.alt = img.dataset.originalAlt;
-        img.classList.remove('marquee_img--active');
-      });
-    }
-
-    // Mouseenter on image: activate
-    track.addEventListener('mouseenter', function (e) {
-      const target = e.target.closest('img.marquee_img');
-      if (target) {
-        isHovering = true;
-        clearTimeout(hoverTimeout);
-        activateAllImgs(target);
-      }
-    }, true);
-
-    // Mouseleave on image: deactivate
-    track.addEventListener('mouseleave', function (e) {
-      if (isHovering) {
-        isHovering = false;
-        clearTimeout(hoverTimeout);
-        hoverTimeout = setTimeout(() => {
-          deactivateAllImgs();
-        }, 0);
-      }
-    }, true);
-  }
-}
-
-// Initialize only if body has 'page-index' class
-document.addEventListener('DOMContentLoaded', () => {
-  if (document.body.classList.contains('page-index')) {
-    // Legacy GSAP marquee is disabled by default because js/marquee.js now
-    // runs a recycler-based endless loop for mixed image/video content.
-    // Opt in only when explicitly needed.
-    if (document.body.dataset.legacyGsapMarquee === "1") {
-      initGsapMarquee({ trackSelector: '.marquee_track', duration: 30 });
-    }
-    initMarqueeTitleFloat();
-  }
-});
 import "./core.js";
 import { initHomePage } from "./page-home.js";
 import { initPreloader } from "./preloader.js";
@@ -1117,6 +1006,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".s-marquee, .marquee").forEach(el => {
     initMarquee({ selector: el, speed: 40 });
   });
+  if (document.body.classList.contains("page-index")) {
+    initMarqueeTitleFloat();
+  }
 
   initPageFade();
   initLenisSmoothScroll();
