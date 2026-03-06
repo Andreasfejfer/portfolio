@@ -100,7 +100,18 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
     const style = window.getComputedStyle(el);
     const ml = parseFloat(style.marginLeft) || 0;
     const mr = parseFloat(style.marginRight) || 0;
-    return el.getBoundingClientRect().width + ml + mr;
+    let width = el.getBoundingClientRect().width;
+    if (width <= 0) {
+      const cssVar = window.getComputedStyle(marquee).getPropertyValue('--img-width').trim();
+      if (cssVar.endsWith('vw')) {
+        width = (window.innerWidth * parseFloat(cssVar)) / 100;
+      } else if (cssVar.endsWith('px')) {
+        width = parseFloat(cssVar);
+      } else if (cssVar) {
+        width = parseFloat(cssVar) || 0;
+      }
+    }
+    return Math.max(0, width) + ml + mr;
   };
 
   const getPixelsPerSecond = () => {
@@ -157,6 +168,14 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
     if (!last) last = now;
     const dt = (now - last) / 1000;
     last = now;
+
+    if (pxPerSecond <= 0) {
+      ensureCoverage();
+      pxPerSecond = getPixelsPerSecond();
+      rafId = requestAnimationFrame(tick);
+      return;
+    }
+
     offset -= pxPerSecond * dt;
     recycle();
     track.style.transform = 'translate3d(' + offset + 'px, 0, 0)';
