@@ -91,6 +91,7 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
   track.style.setProperty('animation', 'none', 'important');
   track.style.setProperty('animation-name', 'none', 'important');
   track.style.setProperty('animation-duration', '0s', 'important');
+  track.style.setProperty('transition', 'none', 'important');
   if (window.gsap && typeof window.gsap.killTweensOf === 'function') {
     window.gsap.killTweensOf(track);
   }
