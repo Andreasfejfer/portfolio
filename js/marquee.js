@@ -10,6 +10,7 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
   const imageSelector = '.marquee__img, .marquee_img';
   const videoSelector = '.marquee_video, .marquue_video';
   const mediaSelector = imageSelector + ', ' + videoSelector;
+  const initializedVideos = new WeakSet();
 
   // Normalize legacy image-only markup into wrapper items.
   const normalizeToItem = node => {
@@ -38,8 +39,8 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
   const setupVideo = node => {
     const video = node && node.tagName === 'VIDEO' ? node : node && node.querySelector ? node.querySelector('video') : null;
     if (!video) return;
-    if (video.dataset.marqueeVideoInit === '1') return;
-    video.dataset.marqueeVideoInit = '1';
+    if (initializedVideos.has(video)) return;
+    initializedVideos.add(video);
 
     video.autoplay = true;
     video.loop = true;
