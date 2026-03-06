@@ -108,6 +108,31 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
     // Keep existing API semantics where `speed` was duration-like.
     return Math.max(10, total / Math.max(1, speed));
   };
+  const getTrackTotalWidth = () => {
+    return Array.from(track.children).reduce((sum, child) => sum + getItemOuterWidth(child), 0);
+  };
+  const ensureCoverage = () => {
+    const viewportWidth = marquee.getBoundingClientRect().width || window.innerWidth || 0;
+    if (!viewportWidth) return;
+
+    let total = getTrackTotalWidth();
+    let guard = 0;
+
+    // Recycler marquee needs enough runway to avoid right-side gaps
+    // before the left-most item gets recycled.
+    while (total < viewportWidth * 2.5 && guard < 4) {
+      const snapshot = Array.from(track.children);
+      if (!snapshot.length) break;
+      const fragment = document.createDocumentFragment();
+      snapshot.forEach(node => fragment.appendChild(node.cloneNode(true)));
+      track.appendChild(fragment);
+      track.querySelectorAll(videoSelector).forEach(setupVideo);
+      total = getTrackTotalWidth();
+      guard++;
+    }
+  };
+
+  ensureCoverage();
 
   let pxPerSecond = getPixelsPerSecond();
   let offset = 0;
@@ -154,6 +179,7 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
     }
   });
   window.addEventListener('resize', () => {
+    ensureCoverage();
     pxPerSecond = getPixelsPerSecond();
     recycle();
   });
