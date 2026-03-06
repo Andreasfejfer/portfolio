@@ -4,6 +4,35 @@ body{
   overflow-x:hidden;
 }
 
+/* iPad/Safari-safe full-height utility for sections using viewport height */
+.vh-safe{
+  min-height:100vh;
+  min-height:100svh;
+  min-height:100dvh;
+}
+
+@supports (-webkit-touch-callout: none){
+  .vh-safe{
+    min-height:-webkit-fill-available;
+  }
+}
+
+/* iPad/Safari-safe first fold without changing Webflow classes */
+body.page-home .page_wrapper > :first-child,
+body.page-index .page_wrapper > :first-child {
+  min-height: 100vh;
+  min-height: 100svh;
+  min-height: 100dvh;
+  height: auto;
+}
+
+@supports (-webkit-touch-callout: none) {
+  body.page-home .page_wrapper > :first-child,
+  body.page-index .page_wrapper > :first-child {
+    min-height: -webkit-fill-available;
+  }
+}
+
 
 /* Repet layered hover/drag effect */
 .repet {
