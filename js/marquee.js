@@ -6,9 +6,32 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
   const marquee = typeof selector === 'string' ? document.querySelector(selector) : selector;
   if (!marquee) return;
 
-  // Support both legacy and current class naming.
-  const images = Array.from(marquee.querySelectorAll('.marquee__img, .marquee_img'));
-  if (!images.length) return;
+  const itemSelector = '.marquee__item, .marquee_div';
+  const imageSelector = '.marquee__img, .marquee_img';
+
+  // Normalize legacy image-only markup into wrapper items.
+  const normalizeToItem = node => {
+    if (!node) return null;
+    if (node.matches(itemSelector)) return node;
+    if (!node.matches(imageSelector)) return null;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'marquee_div';
+    if (node.parentNode) {
+      node.parentNode.insertBefore(wrapper, node);
+      wrapper.appendChild(node);
+    }
+    return wrapper;
+  };
+
+  let items = Array.from(marquee.querySelectorAll(itemSelector));
+  if (!items.length) {
+    items = Array.from(marquee.querySelectorAll(imageSelector))
+      .map(normalizeToItem)
+      .filter(Boolean);
+  }
+  if (!items.length) return;
+  const itemByIdSelector = id => '.marquee__item[data-marquee-id="' + id + '"], .marquee_div[data-marquee-id="' + id + '"]';
 
   const setupVideo = video => {
     video.autoplay = true;
@@ -26,9 +49,9 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
 
   marquee.querySelectorAll('.marquee_video').forEach(setupVideo);
 
-  // Assign a unique data-marquee-id to each image (before duplication)
-  images.forEach((img, i) => {
-    img.dataset.marqueeId = i;
+  // Assign a unique data-marquee-id to each item (before duplication)
+  items.forEach((item, i) => {
+    item.dataset.marqueeId = i;
   });
 
   // Remove all images from their parents and add to track
@@ -36,15 +59,15 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
   if (!track) {
     track = document.createElement('div');
     track.className = 'marquee__track';
-    images.forEach(img => {
-      if (img.parentNode) img.parentNode.removeChild(img);
-      track.appendChild(img);
+    items.forEach(item => {
+      if (item.parentNode) item.parentNode.removeChild(item);
+      track.appendChild(item);
     });
     marquee.appendChild(track);
   }
 
   // Duplicate images for seamless loop if not already duplicated
-  if (track.children.length === images.length) {
+  if (track.children.length === items.length) {
     track.innerHTML += track.innerHTML;
   }
 
@@ -53,22 +76,22 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
   // Set animation duration based on speed
   track.style.animationDuration = speed + 's';
 
-  // Add hover effect: highlight all images with the same data-marquee-id
+  // Add hover effect: highlight all items with the same data-marquee-id
   track.addEventListener('mouseover', function (e) {
-    const target = e.target.closest('.marquee__img, .marquee_img');
+    const target = e.target.closest(itemSelector);
     if (target && target.dataset.marqueeId) {
       const id = target.dataset.marqueeId;
-      marquee.querySelectorAll('.marquee__img[data-marquee-id="' + id + '"], .marquee_img[data-marquee-id="' + id + '"]').forEach(img => {
-        img.classList.add('marquee__img--active', 'marquee_img--active');
+      marquee.querySelectorAll(itemByIdSelector(id)).forEach(item => {
+        item.classList.add('marquee__item--active', 'marquee_div--active');
       });
     }
   });
   track.addEventListener('mouseout', function (e) {
-    const target = e.target.closest('.marquee__img, .marquee_img');
+    const target = e.target.closest(itemSelector);
     if (target && target.dataset.marqueeId) {
       const id = target.dataset.marqueeId;
-      marquee.querySelectorAll('.marquee__img[data-marquee-id="' + id + '"], .marquee_img[data-marquee-id="' + id + '"]').forEach(img => {
-        img.classList.remove('marquee__img--active', 'marquee_img--active');
+      marquee.querySelectorAll(itemByIdSelector(id)).forEach(item => {
+        item.classList.remove('marquee__item--active', 'marquee_div--active');
       });
     }
   });

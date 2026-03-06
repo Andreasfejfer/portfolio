@@ -8,12 +8,14 @@
   --img-width: 30vw;
   --img-padding: 5vw;
 }
-.marquee_img {
+
+.marquee_div,
+.marquee__item {
   flex: 0 0 var(--img-width);
   aspect-ratio: 3 / 2;
   width: var(--img-width);
   margin: 0 calc(var(--img-padding) / 2);
-  object-fit: cover;
+  overflow: hidden;
   border-radius: 0;
   box-shadow: none;
   background: #eee;
@@ -22,7 +24,20 @@
   position: relative;
 }
 
-.marquee_img.marquee_img--active {
+.marquee_img,
+.marquee__img,
+.marquee_div > img,
+.marquee__item > img,
+.marquee_div > video,
+.marquee__item > video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.marquee_div.marquee_div--active,
+.marquee__item.marquee__item--active {
   z-index: 10;
   box-shadow: none;
   filter: none;
