@@ -95,6 +95,11 @@
   animation: marquee 20s linear infinite;
   will-change: transform;
 }
+
+.marquee__track.marquee_track--js,
+.marquee_track.marquee_track--js {
+  animation: none !important;
+}
 @keyframes marquee {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }

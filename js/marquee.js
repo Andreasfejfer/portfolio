@@ -87,7 +87,13 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
   }
 
   track.querySelectorAll(videoSelector).forEach(setupVideo);
-  track.style.animation = 'none';
+  track.classList.add('marquee_track--js');
+  track.style.setProperty('animation', 'none', 'important');
+  track.style.setProperty('animation-name', 'none', 'important');
+  track.style.setProperty('animation-duration', '0s', 'important');
+  if (window.gsap && typeof window.gsap.killTweensOf === 'function') {
+    window.gsap.killTweensOf(track);
+  }
 
   const getItemOuterWidth = el => {
     const style = window.getComputedStyle(el);
@@ -106,6 +112,7 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
   let pxPerSecond = getPixelsPerSecond();
   let offset = 0;
   let last = 0;
+  let lastVideoCheck = 0;
   let rafId = 0;
 
   const recycle = () => {
@@ -127,6 +134,10 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
     offset -= pxPerSecond * dt;
     recycle();
     track.style.transform = 'translate3d(' + offset + 'px, 0, 0)';
+    if (now - lastVideoCheck > 500) {
+      keepVideosPlaying();
+      lastVideoCheck = now;
+    }
     rafId = requestAnimationFrame(tick);
   };
 

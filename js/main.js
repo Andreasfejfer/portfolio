@@ -189,7 +189,12 @@ async function initGsapMarquee({ trackSelector = '.marquee_track', duration = 14
 // Initialize only if body has 'page-index' class
 document.addEventListener('DOMContentLoaded', () => {
   if (document.body.classList.contains('page-index')) {
-    initGsapMarquee({ trackSelector: '.marquee_track', duration: 30 });
+    // Legacy GSAP marquee is disabled by default because js/marquee.js now
+    // runs a recycler-based endless loop for mixed image/video content.
+    // Opt in only when explicitly needed.
+    if (document.body.dataset.legacyGsapMarquee === "1") {
+      initGsapMarquee({ trackSelector: '.marquee_track', duration: 30 });
+    }
     initMarqueeTitleFloat();
   }
 });
