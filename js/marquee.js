@@ -8,12 +8,13 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
 
   const itemSelector = '.marquee__item, .marquee_div';
   const imageSelector = '.marquee__img, .marquee_img';
+  const mediaSelector = imageSelector + ', .marquee_video';
 
   // Normalize legacy image-only markup into wrapper items.
   const normalizeToItem = node => {
     if (!node) return null;
     if (node.matches(itemSelector)) return node;
-    if (!node.matches(imageSelector)) return null;
+    if (!node.matches(mediaSelector)) return null;
 
     const wrapper = document.createElement('div');
     wrapper.className = 'marquee_div';
@@ -26,7 +27,7 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
 
   let items = Array.from(marquee.querySelectorAll(itemSelector));
   if (!items.length) {
-    items = Array.from(marquee.querySelectorAll(imageSelector))
+    items = Array.from(marquee.querySelectorAll(mediaSelector))
       .map(normalizeToItem)
       .filter(Boolean);
   }

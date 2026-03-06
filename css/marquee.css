@@ -26,10 +26,10 @@
 
 .marquee_img,
 .marquee__img,
-.marquee_div > img,
-.marquee__item > img,
-.marquee_div > video,
-.marquee__item > video {
+.marquee_div img,
+.marquee__item img,
+.marquee_div video,
+.marquee__item video {
   display: block;
   width: 100%;
   height: 100%;
