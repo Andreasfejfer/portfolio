@@ -1004,7 +1004,7 @@ function initProjectOverlayExperience({
 document.addEventListener("DOMContentLoaded", () => {
   const onAboutPage = isAboutPage();
   document.querySelectorAll(".s-marquee, .marquee").forEach(el => {
-    initMarquee({ selector: el, speed: 40 });
+    initMarquee({ selector: el, speed: 50 });
   });
   if (document.body.classList.contains("page-index")) {
     initMarqueeTitleFloat();
