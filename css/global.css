@@ -17,22 +17,6 @@ body{
   }
 }
 
-/* iPad/Safari-safe first fold without changing Webflow classes */
-body.page-home .page_wrapper > :first-child,
-body.page-index .page_wrapper > :first-child {
-  min-height: 100vh;
-  min-height: 100svh;
-  min-height: 100dvh;
-  height: auto;
-}
-
-@supports (-webkit-touch-callout: none) {
-  body.page-home .page_wrapper > :first-child,
-  body.page-index .page_wrapper > :first-child {
-    min-height: -webkit-fill-available;
-  }
-}
-
 
 /* Repet layered hover/drag effect */
 .repet {
