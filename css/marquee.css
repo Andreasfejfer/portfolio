@@ -11,10 +11,12 @@
 
 .marquee_div,
 .marquee__item {
+  box-sizing: border-box;
   flex: 0 0 var(--img-width);
   aspect-ratio: 3 / 2;
   width: var(--img-width);
   margin: 0 calc(var(--img-padding) / 2);
+  padding: 0;
   overflow: hidden;
   border-radius: 0;
   box-shadow: none;
@@ -29,6 +31,8 @@
   display: block;
   width: 100%;
   height: 100%;
+  margin: 0;
+  padding: 0;
   position: relative;
   overflow: hidden;
 }
@@ -42,7 +46,18 @@
   height: 100% !important;
   max-width: 100% !important;
   max-height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 0;
   overflow: hidden;
+}
+
+.marquee_div .w-embed > *,
+.marquee__item .w-embed > *,
+.marquee_div .w-video > *,
+.marquee__item .w-video > * {
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .marquee_img,
@@ -74,7 +89,8 @@
   transform: none;
 }
 
-.marquee__track {
+.marquee__track,
+.marquee_track {
   display: flex;
   animation: marquee 20s linear infinite;
   will-change: transform;

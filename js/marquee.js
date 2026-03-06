@@ -57,10 +57,10 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
   });
 
   // Remove all images from their parents and add to track
-  let track = marquee.querySelector('.marquee__track');
+  let track = marquee.querySelector('.marquee__track, .marquee_track');
   if (!track) {
     track = document.createElement('div');
-    track.className = 'marquee__track';
+    track.className = 'marquee__track marquee_track';
     items.forEach(item => {
       if (item.parentNode) item.parentNode.removeChild(item);
       track.appendChild(item);
