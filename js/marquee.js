@@ -42,24 +42,47 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
     if (initializedVideos.has(video)) return;
     initializedVideos.add(video);
 
+    const forcePlay = () => {
+      video.play().catch(() => {});
+    };
+
     video.autoplay = true;
     video.loop = true;
+    video.defaultMuted = true;
     video.muted = true;
     video.playsInline = true;
     video.controls = false;
+    video.preload = 'auto';
     video.setAttribute('autoplay', '');
     video.setAttribute('loop', '');
     video.setAttribute('muted', '');
     video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    video.setAttribute('preload', 'auto');
     video.removeAttribute('controls');
 
     // Safety fallback: if the browser ignores loop, restart manually.
     video.addEventListener('ended', () => {
       video.currentTime = 0;
-      video.play().catch(() => {});
+      forcePlay();
     });
 
-    video.play().catch(() => {});
+    // Some browsers can pause/stall autoplaying videos inside moving marquees.
+    video.addEventListener('pause', () => {
+      if (!video.ended && !video.seeking) forcePlay();
+    });
+    video.addEventListener('stalled', forcePlay);
+    video.addEventListener('suspend', forcePlay);
+    video.addEventListener('canplay', forcePlay);
+    video.addEventListener('timeupdate', () => {
+      if (!video.duration || !Number.isFinite(video.duration)) return;
+      if (video.duration - video.currentTime < 0.08) {
+        video.currentTime = 0;
+        forcePlay();
+      }
+    });
+
+    forcePlay();
   };
 
   marquee.querySelectorAll(videoSelector).forEach(setupVideo);
@@ -81,12 +104,28 @@ export function initMarquee({ selector = '.marquee', speed = 40 } = {}) {
     marquee.appendChild(track);
   }
 
-  // Duplicate images for seamless loop if not already duplicated
+  // Duplicate items for seamless loop if not already duplicated.
+  // Avoid innerHTML cloning to keep media nodes stable.
   if (track.children.length === items.length) {
-    track.innerHTML += track.innerHTML;
+    const clones = Array.from(track.children).map(node => node.cloneNode(true));
+    const fragment = document.createDocumentFragment();
+    clones.forEach(clone => fragment.appendChild(clone));
+    track.appendChild(fragment);
   }
 
   track.querySelectorAll(videoSelector).forEach(setupVideo);
+
+  const keepVideosPlaying = () => {
+    track.querySelectorAll('video').forEach(video => {
+      if (video.paused && !video.ended) {
+        video.play().catch(() => {});
+      }
+    });
+  };
+  track.addEventListener('animationiteration', keepVideosPlaying);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) keepVideosPlaying();
+  });
 
   // Set animation duration based on speed
   track.style.animationDuration = speed + 's';
