@@ -634,6 +634,18 @@ function initHeaderOnBlackBox() {
   window.addEventListener("resize", requestUpdate);
 }
 
+function initArchiveVideos() {
+  const wrappers = Array.from(document.querySelectorAll(".archive_video"));
+  wrappers.forEach(node => {
+    const video = node.tagName === "VIDEO" ? node : node.querySelector("video");
+    if (!video) return;
+    video.controls = false;
+    video.removeAttribute("controls");
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+  });
+}
+
 function initProjectOverlayExperience({
   wrapperSelector = ".page_wrapper",
   overlayRootSelector = "[data-overlay-root]",
@@ -1003,6 +1015,7 @@ function initProjectOverlayExperience({
 
 document.addEventListener("DOMContentLoaded", () => {
   const onAboutPage = isAboutPage();
+  initArchiveVideos();
   document.querySelectorAll(".s-marquee, .marquee").forEach(el => {
     initMarquee({ selector: el, speed: 50 });
   });

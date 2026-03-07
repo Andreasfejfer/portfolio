@@ -19,6 +19,37 @@ body{
   }
 }
 
+/* Archive media block */
+.archive_div{
+  width:30%;
+  max-width:100%;
+  aspect-ratio:3 / 2;
+  position:relative;
+  overflow:hidden;
+}
+
+.archive_div > .archive_video,
+.archive_div > .w-embed,
+.archive_div > .w-video,
+.archive_div > video,
+.archive_div > iframe,
+.archive_div .archive_video video,
+.archive_div .archive_video iframe,
+.archive_div .w-embed video,
+.archive_div .w-video video,
+.archive_div .w-embed iframe,
+.archive_div .w-video iframe{
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100% !important;
+  height:100% !important;
+  max-width:100% !important;
+  max-height:100% !important;
+  object-fit:cover;
+  object-position:50% 50%;
+}
+
 
 /* Repet layered hover/drag effect */
 .repet {
